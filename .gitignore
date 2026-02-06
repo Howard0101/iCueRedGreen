@@ -1,0 +1,14 @@
+### BEGIN TEMPLATE-MANAGED (DO NOT EDIT)
+/.template/reports/
+/.template/backup/
+### END TEMPLATE-MANAGED
+
+# Build artifacts
+**/bin/
+**/obj/
+.vs/
+artifacts/publish/win-x64/logs/
+
+# Local-only files
+docs/LOCAL_PATHS.md
+docs/task-scheduler/iCUERedGreen.task.local.xml

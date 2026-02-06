@@ -1,0 +1,223 @@
+{
+
+  "templateVersion": "1.8.3",
+
+  "templateSourcePath": "D:\\Source\\ai\\Template",
+
+  "generatedAt": "2026-02-05 17:31:07",
+
+  "managedFiles": [
+
+    {
+
+      "path": ".gitattributes",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".github/CONTRIBUTING.md",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".github/pull_request_template.md",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".github/workflows/ai-docs-hint.yml",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".github/workflows/ai-docs.yml",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".gitignore",
+
+      "mode": "merge-additive",
+
+      "block": "TEMPLATE-MANAGED"
+
+    },
+
+    {
+
+      "path": ".template/bootstrap/bootstrap-template.ps1",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".template/bootstrap/generate-changelog.ps1",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".template/docs/ai/_ai_changelog_automation.md",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".template/docs/ai/_ai_template_lifecycle.md",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".template/docs/changelog.md",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".template/docs/patch_checklist.md",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".template/docs/patch_v1.8.4.md",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".template/docs/V1_8_HANDOUT.md",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".template/managed/gitignore.txt",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".template/manifest.json",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".template/upgrade/template-upgrade.ps1",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": ".template/version.txt",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": "AGENTS.md",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": "docs/ai/_ai_instructions_project.md",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": "docs/changelog/CHANGELOG.md",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": "docs/changelog/CHANGELOG.txt",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": "docs/diagrams/ai_codex_workflow.mmd",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": "README.md",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": "scripts/make-ai-docs.ps1",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
+      "path": "scripts/normalize-line-endings.ps1",
+
+      "mode": "overwrite"
+
+    }
+
+  ]
+
+}
