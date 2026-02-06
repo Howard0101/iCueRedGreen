@@ -141,7 +141,10 @@ function Render-Or-Check([string]$Mode, [string]$InMmd, [string]$CommittedOut, [
 
 function Render-WorkflowDiagrams([string]$RepoRoot, [string]$Mode, [int]$Scale, [string]$Format) {
   $mmdIn = Join-Path $RepoRoot "docs\diagrams\ai_codex_workflow.mmd"
-  if (-not (Test-Path $mmdIn)) { throw "Missing Mermaid input: $mmdIn" }
+  if (-not (Test-Path $mmdIn)) {
+    Write-Host "Skipping workflow diagram render (missing): $mmdIn"
+    return
+  }
 
   Ensure-MermaidCli
 
