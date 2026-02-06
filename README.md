@@ -28,7 +28,6 @@ The following documents are added when needed and linked here once they exist:
 <!-- TEMPLATE:TOOLING -->
 - Normalize Windows line endings before commit when AI/CI tools touched files: [scripts/normalize-line-endings.ps1](scripts/normalize-line-endings.ps1)
 - AI documentation tooling: [scripts/make-ai-docs.ps1](scripts/make-ai-docs.ps1)
-- Diagrams: [docs/diagrams/](docs/diagrams/)
 <!-- /TEMPLATE:TOOLING -->
 
 ## Notes
