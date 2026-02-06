@@ -12,3 +12,4 @@ artifacts/publish/win-x64/logs/
 # Local-only files
 docs/LOCAL_PATHS.md
 docs/task-scheduler/iCUERedGreen.task.local.xml
+scripts/update-published.ps1
