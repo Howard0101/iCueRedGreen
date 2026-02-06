@@ -4,6 +4,7 @@ CHANGELOG (plain text)
 [Changed]
 - Removed iCUE SDK files from the repository; use a local SDK download.
 - Made SDK DLL inclusion an explicit opt-in (`IncludeCueSdk=true`).
+- Suppressed repeated iCUE release-control errors; log once per change and on recovery.
 
 [Docs]
 - Converted documentation file references to clickable links.

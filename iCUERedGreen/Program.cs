@@ -9,6 +9,8 @@ internal static class Program
 {
     private static bool _wasInError;
     private static string? _lastErrorSignature;
+    private static bool _wasInReleaseError;
+    private static string? _lastReleaseErrorSignature;
 
     private enum SwitchState
     {
@@ -185,10 +187,11 @@ internal static class Program
             try
             {
                 cue.ReleaseControl();
+                LogReleaseRecoveryIfNeeded(logger);
             }
             catch (Exception colorEx)
             {
-                logger.Error(colorEx, "Failed to release iCUE control.");
+                LogReleaseErrorIfNeeded(colorEx, logger);
             }
             newState = SwitchState.Unknown;
         }
@@ -238,6 +241,40 @@ internal static class Program
         _wasInError = false;
         _lastErrorSignature = null;
         logger.Info("Switch state recovered.");
+    }
+
+    /// <summary>
+    /// Logs iCUE release errors only when the failure changes.
+    /// </summary>
+    /// <param name="ex">The release exception.</param>
+    /// <param name="logger">The logger to use.</param>
+    private static void LogReleaseErrorIfNeeded(Exception ex, Logger logger)
+    {
+        string signature = $"{ex.GetType().Name}:{ex.Message}";
+        if (string.Equals(_lastReleaseErrorSignature, signature, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _lastReleaseErrorSignature = signature;
+        _wasInReleaseError = true;
+        logger.Error(ex, "Failed to release iCUE control.");
+    }
+
+    /// <summary>
+    /// Logs iCUE release recovery when a previous release failure is resolved.
+    /// </summary>
+    /// <param name="logger">The logger to use.</param>
+    private static void LogReleaseRecoveryIfNeeded(Logger logger)
+    {
+        if (!_wasInReleaseError)
+        {
+            return;
+        }
+
+        _wasInReleaseError = false;
+        _lastReleaseErrorSignature = null;
+        logger.Info("iCUE release recovered.");
     }
 
     /// <summary>
