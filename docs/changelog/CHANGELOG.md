@@ -7,12 +7,10 @@
 - Replaced internal company references with personal author name.
 - Task Scheduler XML now uses placeholder user/path values for public sharing.
 - Renamed AI workflow diagram artifacts to `ai_codex_workflow.*`.
-- Made AI workflow diagram optional for documentation checks.
 
 [Docs]
 - Added third-party notices.
 - Documented path placeholders for install and publish directories.
-- Removed the AI workflow diagram from the repository.
 
 ## 1.0.0.0 — 2026-02-06 13:34:39
 [Added]

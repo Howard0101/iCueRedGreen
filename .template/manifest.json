@@ -188,6 +188,14 @@
 
     {
 
+      "path": "docs/diagrams/ai_codex_workflow.mmd",
+
+      "mode": "overwrite"
+
+    },
+
+    {
+
       "path": "README.md",
 
       "mode": "overwrite"
