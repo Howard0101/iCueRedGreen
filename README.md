@@ -17,6 +17,7 @@ The following documents are added when needed and linked here once they exist:
 - Background Run (Task Scheduler): [docs/BACKGROUND_TASK_SCHEDULER.md](docs/BACKGROUND_TASK_SCHEDULER.md)
 - Future Tray App: [docs/FUTURE_TRAY_APP.md](docs/FUTURE_TRAY_APP.md)
 - Third-Party Notices: [docs/THIRD_PARTY_NOTICES.md](docs/THIRD_PARTY_NOTICES.md)
+- Licenses: [docs/licenses/NLog-BSD-3.txt](docs/licenses/NLog-BSD-3.txt)
 
 ### Changelog
 - Changelog (human-readable): [docs/changelog/CHANGELOG.md](docs/changelog/CHANGELOG.md)

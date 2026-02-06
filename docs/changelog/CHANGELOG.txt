@@ -1,9 +1,15 @@
 CHANGELOG (plain text)
 
 [Unreleased]
+[Changed]
+- Removed iCUE SDK files from the repository; use a local SDK download.
+- Made SDK DLL inclusion an explicit opt-in (`IncludeCueSdk=true`).
+
 [Docs]
 - Converted documentation file references to clickable links.
 - Removed README link to docs/diagrams (diagram folder removed).
+- Added full NLog BSD-3 license text file and linked it.
+- Documented iCUE SDK licensing terms and download requirement.
 
 [1.0.1.0 - 2026-02-06 14:57:07]
 [Changed]

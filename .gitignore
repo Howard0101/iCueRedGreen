@@ -14,3 +14,7 @@ docs/LOCAL_PATHS.md
 docs/task-scheduler/iCUERedGreen.task.local.xml
 scripts/update-published.ps1
 codex-session-id.txt
+
+# Local SDK files (not redistributed)
+iCUESDK/
+iCUERedGreen/Asset/iCUESDK*.dll

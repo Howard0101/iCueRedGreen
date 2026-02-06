@@ -5,7 +5,7 @@ This document explains how to run `iCUERedGreen` and configure FRITZ!DECT 200 po
 ## Prerequisites
 - Windows 10/11
 - iCUE running in the user session
-- 64-bit CUE SDK DLL available (place next to the executable or use `--cuesdk-path`)
+- 64-bit CUE SDK DLL available (download separately; see References)
 
 ## Getting Started
 1. Set the required environment variables in PowerShell:
@@ -21,9 +21,11 @@ $env:FRITZ_AIN="12345 6789012"
 dotnet run --project .\iCUERedGreen\iCUERedGreen.csproj -- --interval 5
 ```
 
-3. To run the published executable, place the CUE SDK DLL next to the exe or provide the path:
+3. Download the iCUE SDK from Corsair (see References). For builds/publish, place `iCUESDK.x64_2019.dll` in `iCUERedGreen\Asset\`.
+   - To include the DLL in publish output, run: `dotnet publish ... -p:IncludeCueSdk=true`.
+4. To run the published executable, place the CUE SDK DLL next to the exe or provide the path:
 ```powershell
-.\iCUERedGreen.exe --cuesdk-path "C:\Path\To\CUESDK.x64_2017.dll"
+.\iCUERedGreen.exe --cuesdk-path "C:\Path\To\iCUESDK.x64_2019.dll"
 ```
 
 ## Path Placeholders
