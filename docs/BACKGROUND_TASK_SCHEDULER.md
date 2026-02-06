@@ -24,7 +24,7 @@ This guide runs `iCUERedGreen` automatically at user logon, hidden in the backgr
 
 ## XML Import (Alternative)
 1. In Task Scheduler, choose **Import Task...**.
-2. Select `docs\task-scheduler\iCUERedGreen.task.xml`.
+2. Select [docs/task-scheduler/iCUERedGreen.task.xml](task-scheduler/iCUERedGreen.task.xml).
 3. Review the program path and working directory (update if needed).
 4. Save the task.
 5. If you import via `schtasks`, the XML must be UTF-16 (the provided file is already in that format).

@@ -29,7 +29,7 @@ dotnet run --project .\iCUERedGreen\iCUERedGreen.csproj -- --interval 5
 ## Path Placeholders
 - `<INSTALL_DIR>` = install directory containing `iCUERedGreen.exe`.
 - `<PUBLISH_DIR>` = local publish output folder (e.g., `artifacts\publish\win-x64`).
-- Optional: keep a local mapping in `docs/LOCAL_PATHS.md` (ignored by git).
+- Optional: keep a local mapping in `docs/LOCAL_PATHS.md` (local-only; ignored by git).
 
 ## Configuration Precedence
 Configuration is resolved in this order:
@@ -109,11 +109,11 @@ Example structure:
 - The file is updated on each poll to show the latest heartbeat timestamp.
 
 ## Update Script
-- `scripts\update-published.ps1` updates the published deployment in `<INSTALL_DIR>`.
+- `scripts\update-published.ps1` (local-only; ignored by git) updates the published deployment in `<INSTALL_DIR>`.
 - It preserves `appsettings.json`, `nlog.config`, and `logs\` by default.
 
 ## Hidden Startup
-- Use `start-hidden.ps1` next to the executable to run without a visible console window.
+- Use [iCUERedGreen/start-hidden.ps1](../iCUERedGreen/start-hidden.ps1) next to the executable to run without a visible console window.
 - The Task Scheduler XML already references this launcher.
 
 ## Troubleshooting
@@ -127,5 +127,5 @@ Example structure:
 - Timeouts: The FRITZ HTTP timeout is 3 seconds. If your network is slow, stabilize connectivity or reduce retries by ensuring the first login succeeds.
 
 ## References
-- iCUE SDK GitHub source: https://github.com/CorsairOfficial/cue-sdk
-- iCUE SDK documentation: https://corsairofficial.github.io/cue-sdk/
+- iCUE SDK GitHub source: [https://github.com/CorsairOfficial/cue-sdk](https://github.com/CorsairOfficial/cue-sdk)
+- iCUE SDK documentation: [https://corsairofficial.github.io/cue-sdk/](https://corsairofficial.github.io/cue-sdk/)

@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## Unreleased
+[Docs]
+- Converted documentation file references to clickable links.
 
 ## 1.0.1.0 — 2026-02-06 14:57:07
 [Changed]
