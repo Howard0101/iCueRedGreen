@@ -1,6 +1,8 @@
 CHANGELOG (plain text)
 
 [Unreleased]
+
+[1.0.1.0 - 2026-02-06 14:57:07]
 [Changed]
 - Log switch state errors only when the error changes, and log a recovery once.
 - Treat "inval" responses as DECT200 unreachable or invalid AIN.
