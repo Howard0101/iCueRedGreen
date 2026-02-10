@@ -2,6 +2,10 @@ CHANGELOG (plain text)
 
 [Unreleased]
 
+[1.1.0.19 - 2026-02-10 21:24:06]
+[Fixed]
+- Generated distinct tray status icons at runtime and removed unused embedded icons.
+
 [1.1.0.18 - 2026-02-10 21:04:44]
 [Changed]
 - Updated update-published to stop/restart the tray scheduled task before copying.

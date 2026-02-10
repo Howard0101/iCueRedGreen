@@ -1,4 +1,7 @@
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Runtime.InteropServices;
 using System.Globalization;
 using System.Windows.Forms;
 using iCUERedGreen;
@@ -147,9 +150,6 @@ internal sealed class TrayApplicationContext : ApplicationContext
         private readonly Icon _fallback;
         private const string ResourcePrefix = "iCUERedGreen.Tray.Asset.";
         private const string DefaultIconFileName = "iCUERedGreen.keyboard-dot.ico";
-        private const string OnIconFileName = "iCUERedGreen.keyboard-dot.on.ico";
-        private const string OffIconFileName = "iCUERedGreen.keyboard-dot.off.ico";
-        private const string UnknownIconFileName = "iCUERedGreen.keyboard-dot.unknown.ico";
 
         /// <summary>
         /// Loads tray icons from embedded resources.
@@ -158,9 +158,9 @@ internal sealed class TrayApplicationContext : ApplicationContext
         public static TrayIcons Load()
         {
             Icon fallback = LoadEmbeddedIcon(DefaultIconFileName) ?? (Icon)SystemIcons.Application.Clone();
-            Icon onIcon = LoadEmbeddedIcon(OnIconFileName) ?? fallback;
-            Icon offIcon = LoadEmbeddedIcon(OffIconFileName) ?? fallback;
-            Icon unknownIcon = LoadEmbeddedIcon(UnknownIconFileName) ?? fallback;
+            Icon onIcon = CreateOverlayIcon(fallback, Color.Red);
+            Icon offIcon = CreateOverlayIcon(fallback, Color.LimeGreen);
+            Icon unknownIcon = CreateOverlayIcon(fallback, Color.DodgerBlue);
 
             return new TrayIcons(onIcon, offIcon, unknownIcon, fallback);
         }
@@ -198,6 +198,62 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
             using Icon temp = new Icon(stream);
             return (Icon)temp.Clone();
+        }
+
+        /// <summary>
+        /// Creates a new icon by overlaying a colored status dot on the base icon.
+        /// </summary>
+        /// <param name="baseIcon">The base icon to clone and draw on.</param>
+        /// <param name="dotColor">The overlay dot color.</param>
+        /// <returns>The new icon with the status dot overlay.</returns>
+        private static Icon CreateOverlayIcon(Icon baseIcon, Color dotColor)
+        {
+            if (baseIcon is null)
+            {
+                throw new ArgumentNullException(nameof(baseIcon));
+            }
+
+            using Bitmap bitmap = baseIcon.ToBitmap();
+            using Graphics graphics = Graphics.FromImage(bitmap);
+            graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+            int size = Math.Min(bitmap.Width, bitmap.Height);
+            int diameter = Math.Max(4, size / 3);
+            int padding = Math.Max(1, diameter / 6);
+            int x = bitmap.Width - diameter - padding;
+            int y = bitmap.Height - diameter - padding;
+
+            // Draw a status dot overlay in the bottom-right corner.
+            using SolidBrush brush = new SolidBrush(dotColor);
+            using Pen outline = new Pen(Color.Black, 1);
+            graphics.FillEllipse(brush, x, y, diameter, diameter);
+            graphics.DrawEllipse(outline, x, y, diameter, diameter);
+
+            IntPtr iconHandle = bitmap.GetHicon();
+            try
+            {
+                using Icon temp = Icon.FromHandle(iconHandle);
+                return (Icon)temp.Clone();
+            }
+            finally
+            {
+                NativeMethods.DestroyIcon(iconHandle);
+            }
+        }
+
+        /// <summary>
+        /// Native methods for icon handle cleanup.
+        /// </summary>
+        private static class NativeMethods
+        {
+            /// <summary>
+            /// Destroys an icon handle.
+            /// </summary>
+            /// <param name="handle">The handle to destroy.</param>
+            /// <returns>True when destroyed; otherwise false.</returns>
+            [DllImport("user32.dll", SetLastError = true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool DestroyIcon(IntPtr handle);
         }
     }
 
