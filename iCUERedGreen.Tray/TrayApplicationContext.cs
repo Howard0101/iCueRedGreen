@@ -145,18 +145,22 @@ internal sealed class TrayApplicationContext : ApplicationContext
         public Icon Unknown { get; }
 
         private readonly Icon _fallback;
+        private const string ResourcePrefix = "iCUERedGreen.Tray.Asset.";
+        private const string DefaultIconFileName = "iCUERedGreen.keyboard-dot.ico";
+        private const string OnIconFileName = "iCUERedGreen.keyboard-dot.on.ico";
+        private const string OffIconFileName = "iCUERedGreen.keyboard-dot.off.ico";
+        private const string UnknownIconFileName = "iCUERedGreen.keyboard-dot.unknown.ico";
 
         /// <summary>
-        /// Loads tray icons from the application directory.
+        /// Loads tray icons from embedded resources.
         /// </summary>
         /// <returns>The loaded tray icons.</returns>
         public static TrayIcons Load()
         {
-            string baseDir = AppContext.BaseDirectory;
-            Icon fallback = LoadIcon(Path.Combine(baseDir, "iCUERedGreen.keyboard-dot.ico")) ?? SystemIcons.Application;
-            Icon onIcon = LoadIcon(Path.Combine(baseDir, "iCUERedGreen.keyboard-dot.on.ico")) ?? fallback;
-            Icon offIcon = LoadIcon(Path.Combine(baseDir, "iCUERedGreen.keyboard-dot.off.ico")) ?? fallback;
-            Icon unknownIcon = LoadIcon(Path.Combine(baseDir, "iCUERedGreen.keyboard-dot.unknown.ico")) ?? fallback;
+            Icon fallback = LoadEmbeddedIcon(DefaultIconFileName) ?? (Icon)SystemIcons.Application.Clone();
+            Icon onIcon = LoadEmbeddedIcon(OnIconFileName) ?? fallback;
+            Icon offIcon = LoadEmbeddedIcon(OffIconFileName) ?? fallback;
+            Icon unknownIcon = LoadEmbeddedIcon(UnknownIconFileName) ?? fallback;
 
             return new TrayIcons(onIcon, offIcon, unknownIcon, fallback);
         }
@@ -178,18 +182,22 @@ internal sealed class TrayApplicationContext : ApplicationContext
         }
 
         /// <summary>
-        /// Loads an icon from disk.
+        /// Loads an icon embedded resource by file name.
         /// </summary>
-        /// <param name="path">The icon path.</param>
+        /// <param name="fileName">The icon file name.</param>
         /// <returns>The icon, or null when missing.</returns>
-        private static Icon? LoadIcon(string path)
+        private static Icon? LoadEmbeddedIcon(string fileName)
         {
-            if (!File.Exists(path))
+            string resourceName = $"{ResourcePrefix}{fileName}";
+            System.Reflection.Assembly assembly = typeof(TrayIcons).Assembly;
+            using Stream? stream = assembly.GetManifestResourceStream(resourceName);
+            if (stream is null)
             {
                 return null;
             }
 
-            return new Icon(path);
+            using Icon temp = new Icon(stream);
+            return (Icon)temp.Clone();
         }
     }
 

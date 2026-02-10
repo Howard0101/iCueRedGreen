@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.0.7 — 2026-02-10 19:07:32
+[Fixed]
+- Embedded tray icons to avoid missing runtime icon files.
+
 ## 1.1.0.6 — 2026-02-10 18:12:37
 [Changed]
 - Explicitly discard the worker-fault continuation task to silence CS4014.
