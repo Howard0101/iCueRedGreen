@@ -686,6 +686,12 @@ internal sealed class CueKeyController
         _sessionHandler = handler;
 
         CorsairError connectResult = CorsairNative.CorsairConnect(_sessionHandler, IntPtr.Zero);
+        if (connectResult == CorsairError.CE_InvalidOperation)
+        {
+            CorsairNative.CorsairDisconnect();
+            connectResult = CorsairNative.CorsairConnect(_sessionHandler, IntPtr.Zero);
+        }
+
         if (connectResult != CorsairError.CE_Success)
         {
             throw new InvalidOperationException($"CorsairConnect failed: {connectResult}.");

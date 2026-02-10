@@ -722,6 +722,7 @@ internal static class Program
                 _logger.Warn(ex, "iCUE not available; running without LED control.");
             }
 
+            TryDisconnect();
             _wasUnavailable = true;
             _controller = null;
         }
@@ -748,6 +749,21 @@ internal static class Program
             {
                 HandleCueFailure(ex);
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to disconnect from iCUE to reset the SDK state.
+        /// </summary>
+        private void TryDisconnect()
+        {
+            try
+            {
+                CorsairNative.CorsairDisconnect();
+            }
+            catch (Exception ex)
+            {
+                _logger.Debug(ex, "DEBUG: Failed to disconnect from iCUE.");
             }
         }
 
