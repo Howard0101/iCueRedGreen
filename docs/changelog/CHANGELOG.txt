@@ -2,6 +2,10 @@ CHANGELOG (plain text)
 
 [Unreleased]
 
+[1.1.0.18 - 2026-02-10 21:04:44]
+[Changed]
+- Updated update-published to stop/restart the tray scheduled task before copying.
+
 [1.1.0.17 - 2026-02-10 20:52:22]
 [Fixed]
 - Open Log now opens the log file with the associated app and warns if missing.
