@@ -2,6 +2,10 @@ CHANGELOG (plain text)
 
 [Unreleased]
 
+[1.0.2.3 - 2026-02-10 13:09:13]
+[Changed]
+- Enabled `--toggle-on-keypress` in the Task Scheduler XML templates.
+
 [1.0.2.2 - 2026-02-10 13:00:25]
 [Added]
 - Added `--toggle-on-keypress` to toggle the switch on Scroll Lock keypress.
