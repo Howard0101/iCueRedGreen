@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 1.1.0.2 — 2026-02-10 16:29:40
+[Added]
+- Added a WinForms tray app project with menu controls and a settings dialog.
+- Added Windows Credential Manager support for FRITZ credentials in the tray app.
+- Added tray app settings file with dev mode and toggle-on-keypress options.
+
+[Changed]
+- Exposed worker toggle functionality for tray control.
+
 ## 1.1.0.1 — 2026-02-10 15:40:33
 [Changed]
 - Target framework upgraded to net10.0.

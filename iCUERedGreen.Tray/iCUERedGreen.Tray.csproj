@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PlatformTarget>x64</PlatformTarget>
+    <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Asset\iCUERedGreen.keyboard-dot.ico</ApplicationIcon>
     <Version>1.1.0.2</Version>
     <AssemblyVersion>1.1.0.2</AssemblyVersion>
@@ -22,28 +22,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="iCUERedGreen.Tests" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="nlog.config">
+    <Content Include="..\iCUERedGreen\nlog.config">
+      <Link>nlog.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="start-hidden.ps1">
+    <Content Include="..\iCUERedGreen\Asset\iCUERedGreen.keyboard-dot.ico">
+      <Link>Asset\iCUERedGreen.keyboard-dot.ico</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-      <TargetPath>start-hidden.ps1</TargetPath>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(IncludeCueSdk)' == 'true' and Exists('Asset\\iCUESDK.x64_2019.dll')">
-    <Content Include="Asset\iCUESDK.x64_2019.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-      <TargetPath>iCUESDK.x64_2019.dll</TargetPath>
     </Content>
   </ItemGroup>
 

@@ -18,6 +18,8 @@ public sealed class WorkerController
     private string? _lastReleaseErrorSignature;
     private CancellationTokenSource? _runCts;
     private Task? _runTask;
+    private PollingCoordinator? _coordinator;
+    private CancellationToken _runToken;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="WorkerController"/> class.
@@ -35,6 +37,11 @@ public sealed class WorkerController
     /// Occurs when the switch state changes.
     /// </summary>
     public event EventHandler<SwitchStateChangedEventArgs>? SwitchStateChanged;
+
+    /// <summary>
+    /// Gets a value indicating whether the worker is running.
+    /// </summary>
+    public bool IsRunning => _runTask is not null;
 
     /// <summary>
     /// Starts the worker loop.
@@ -80,6 +87,23 @@ public sealed class WorkerController
         _runTask = null;
         _runCts.Dispose();
         _runCts = null;
+        _coordinator = null;
+        _runToken = default;
+    }
+
+    /// <summary>
+    /// Toggles the switch and refreshes the LED state.
+    /// </summary>
+    /// <returns>A task that completes when the toggle finishes.</returns>
+    public Task ToggleAsync()
+    {
+        PollingCoordinator? coordinator = _coordinator;
+        if (coordinator is null)
+        {
+            throw new InvalidOperationException("Worker is not running.");
+        }
+
+        return coordinator.ToggleAndRefreshAsync(_runToken);
     }
 
     /// <summary>
@@ -103,43 +127,54 @@ public sealed class WorkerController
         using FritzAhaClient fritz = new FritzAhaClient(_settings, _logger);
         CueSession cueSession = new CueSession(_settings, _logger);
         PollingCoordinator coordinator = new PollingCoordinator(this, fritz, cueSession, _logger);
-        using KeyboardHookRunner? hook = _settings.ToggleOnKeypress
-            ? KeyboardHookRunner.TryStart(
-                () => coordinator.ToggleAndRefreshAsync(cancellationToken),
-                _logger)
-            : null;
+        _coordinator = coordinator;
+        _runToken = cancellationToken;
 
-        if (_settings.ToggleOnKeypress && hook is null)
+        try
         {
-            _logger.Warn("Keyboard hook unavailable; --toggle-on-keypress disabled.");
-        }
-        else if (hook is not null)
-        {
-            _logger.Info("Keyboard hook enabled; Scroll Lock toggles the switch.");
-        }
+            using KeyboardHookRunner? hook = _settings.ToggleOnKeypress
+                ? KeyboardHookRunner.TryStart(
+                    () => coordinator.ToggleAndRefreshAsync(cancellationToken),
+                    _logger)
+                : null;
 
-        string runningFilePath = GetRunningFilePath();
-        CleanupStaleRunningFile(runningFilePath, _logger);
-        WriteHeartbeat(runningFilePath);
+            if (_settings.ToggleOnKeypress && hook is null)
+            {
+                _logger.Warn("Keyboard hook unavailable; --toggle-on-keypress disabled.");
+            }
+            else if (hook is not null)
+            {
+                _logger.Info("Keyboard hook enabled; Scroll Lock toggles the switch.");
+            }
 
-        if (IsStopRequested(runningFilePath, _logger))
-        {
-            return;
-        }
+            string runningFilePath = GetRunningFilePath();
+            CleanupStaleRunningFile(runningFilePath, _logger);
+            WriteHeartbeat(runningFilePath);
 
-        await coordinator.PollAsync(cancellationToken).ConfigureAwait(false);
-        WriteHeartbeat(runningFilePath);
-
-        using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(_settings.IntervalSeconds));
-        while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
-        {
             if (IsStopRequested(runningFilePath, _logger))
             {
-                break;
+                return;
             }
 
             await coordinator.PollAsync(cancellationToken).ConfigureAwait(false);
             WriteHeartbeat(runningFilePath);
+
+            using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(_settings.IntervalSeconds));
+            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+            {
+                if (IsStopRequested(runningFilePath, _logger))
+                {
+                    break;
+                }
+
+                await coordinator.PollAsync(cancellationToken).ConfigureAwait(false);
+                WriteHeartbeat(runningFilePath);
+            }
+        }
+        finally
+        {
+            _coordinator = null;
+            _runToken = default;
         }
     }
     /// <summary>
@@ -890,7 +925,7 @@ public sealed class WorkerController
                 int message = wParam.ToInt32();
                 if (message == WmKeyDown || message == WmSysKeyDown || message == WmKeyUp || message == WmSysKeyUp)
                 {
-                    var data = Marshal.PtrToStructure<KbdLlHookStruct>(lParam);
+                    KbdLlHookStruct data = Marshal.PtrToStructure<KbdLlHookStruct>(lParam);
                     if (data.vkCode == VkScroll)
                     {
                         if (message == WmKeyDown || message == WmSysKeyDown)
