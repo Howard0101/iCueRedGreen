@@ -266,6 +266,7 @@ public sealed class WorkerController
     /// <param name="cueSession">The cue session manager.</param>
     private void LogStateChangeIfNeeded(SwitchState newState, SwitchState lastState, CueSession cueSession)
     {
+        _lastKnownState = newState;
         if (newState == lastState)
         {
             return;

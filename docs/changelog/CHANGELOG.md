@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.0.15 — 2026-02-10 20:35:40
+[Fixed]
+- Track last-known switch state on every poll to enable immediate LED updates.
+
 ## 1.1.0.14 — 2026-02-10 20:23:58
 [Fixed]
 - Apply optimistic LED updates on keypress to reduce perceived lag.
