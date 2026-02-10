@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.0.21 — 2026-02-10 22:11:10
+[Fixed]
+- Prevented polling from overwriting optimistic LED updates during toggles.
+
 ## 1.1.0.20 — 2026-02-10 21:46:29
 [Added]
 - Added DEBUG log lines for optimistic LED updates during toggles.

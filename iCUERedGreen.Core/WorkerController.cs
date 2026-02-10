@@ -16,6 +16,7 @@ public sealed class WorkerController
     private string? _lastErrorSignature;
     private bool _wasInReleaseError;
     private string? _lastReleaseErrorSignature;
+    private int _optimisticTogglePending;
     private CancellationTokenSource? _runCts;
     private Task? _runTask;
     private PollingCoordinator? _coordinator;
@@ -208,7 +209,13 @@ public sealed class WorkerController
             _ => SwitchState.Unknown
         };
 
-        return coordinator.TryApplyOptimisticLed(nextState);
+        if (coordinator.TryApplyOptimisticLed(nextState))
+        {
+            Interlocked.Exchange(ref _optimisticTogglePending, 1);
+            return true;
+        }
+
+        return false;
     }
     /// <summary>
     /// Executes a single poll cycle.
@@ -230,15 +237,18 @@ public sealed class WorkerController
         try
         {
             bool isOn = await fritz.GetSwitchStateAsync(cancellationToken).ConfigureAwait(false);
-            if (isOn)
+            newState = isOn ? SwitchState.On : SwitchState.Off;
+
+            if (Interlocked.CompareExchange(ref _optimisticTogglePending, 0, 0) == 0)
             {
-                cueSession.SetRed();
-                newState = SwitchState.On;
-            }
-            else
-            {
-                cueSession.SetGreen();
-                newState = SwitchState.Off;
+                if (newState == SwitchState.On)
+                {
+                    cueSession.SetRed();
+                }
+                else
+                {
+                    cueSession.SetGreen();
+                }
             }
 
             LogRecoveryIfNeeded();
@@ -615,6 +625,7 @@ public sealed class WorkerController
             }
 
             _lastOptimisticState = SwitchState.Unknown;
+            Interlocked.Exchange(ref _owner._optimisticTogglePending, 0);
         }
 
         /// <summary>
