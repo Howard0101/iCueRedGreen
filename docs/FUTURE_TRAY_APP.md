@@ -11,3 +11,5 @@ This note tracks the future implementation of a small tray application.
 - Use WinForms or WPF with a `NotifyIcon`/tray icon.
 - Keep the core polling logic in the existing console project and host it from the tray app.
 - Add a single-instance guard to avoid duplicate polling loops.
+- The app already supports background runs via Task Scheduler and `--toggle-on-keypress`.
+- iCUE is optional for toggling; LED control resumes when iCUE becomes available.
