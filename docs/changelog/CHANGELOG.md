@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.0.12 — 2026-02-10 20:12:21
+[Fixed]
+- Debounced Scroll Lock key toggles to avoid queued delays.
+
 ## 1.1.0.11 — 2026-02-10 19:59:48
 [Changed]
 - Use warning/error icons for configuration and worker failures.

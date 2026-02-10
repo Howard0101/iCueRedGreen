@@ -763,6 +763,7 @@ public sealed class WorkerController
         private const int WmSysKeyUp = 0x0105;
         private const uint WmQuit = 0x0012;
         private const uint VkScroll = 0x91;
+        private const int ToggleDebounceMilliseconds = 250;
 
         private readonly Func<Task> _onToggleAsync;
         private readonly Logger _logger;
@@ -772,6 +773,7 @@ public sealed class WorkerController
         private HookProc? _hookProc;
         private uint _threadId;
         private bool _scrollLockDown;
+        private long _lastToggleTick;
         private Exception? _startException;
         private bool _disposed;
 
@@ -952,6 +954,15 @@ public sealed class WorkerController
         /// </summary>
         private void QueueToggleAction()
         {
+            long nowTick = Environment.TickCount64;
+            long lastTick = Interlocked.Read(ref _lastToggleTick);
+            if (nowTick - lastTick < ToggleDebounceMilliseconds)
+            {
+                return;
+            }
+
+            Interlocked.Exchange(ref _lastToggleTick, nowTick);
+
             _ = Task.Run(async () =>
             {
                 try
