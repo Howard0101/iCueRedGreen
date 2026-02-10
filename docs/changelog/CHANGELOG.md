@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.0.0 — 2026-02-10 13:40:28
+[Changed]
+- Set production release version to 1.1.0.0.
+
 ## 1.0.2.6 — 2026-02-10 13:32:33
 [Fixed]
 - Reset iCUE SDK state on failures to allow reconnect after iCUE restarts.
