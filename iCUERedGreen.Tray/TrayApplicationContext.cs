@@ -24,6 +24,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly ToolStripMenuItem _infoItem;
     private readonly ToolStripMenuItem _exitItem;
     private readonly TrayIcons _icons;
+    private readonly bool _showDevUi;
     private readonly SemaphoreSlim _actionGate = new(1, 1);
     private readonly TraySettingsStore _settingsStore;
     private readonly CredentialStore _credentialStore;
@@ -37,12 +38,13 @@ internal sealed class TrayApplicationContext : ApplicationContext
     /// Initializes a new instance of the <see cref="TrayApplicationContext"/> class.
     /// </summary>
     /// <param name="logger">The logger to use.</param>
-    public TrayApplicationContext(Logger logger)
+    public TrayApplicationContext(Logger logger, bool showDevUi)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _uiContext = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
         _settingsStore = new TraySettingsStore(Path.Combine(AppContext.BaseDirectory, "appsettings.json"));
         _credentialStore = new CredentialStore(_logger);
+        _showDevUi = showDevUi;
 
         _toggleItem = new ToolStripMenuItem("Toggle Switch", null, OnToggleRequested);
         _settingsItem = new ToolStripMenuItem("Settings...", null, OnSettingsRequested);
@@ -104,7 +106,10 @@ internal sealed class TrayApplicationContext : ApplicationContext
         menu.Items.Add(_restartItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_openLogsItem);
-        menu.Items.Add(_devModeItem);
+        if (_showDevUi)
+        {
+            menu.Items.Add(_devModeItem);
+        }
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_infoItem);
         menu.Items.Add(_exitItem);
@@ -544,7 +549,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
             DevMode = settings.DevMode
         };
 
-        using SettingsForm form = new SettingsForm(model);
+        using SettingsForm form = new SettingsForm(model, _showDevUi);
         if (form.ShowDialog() != DialogResult.OK)
         {
             return;

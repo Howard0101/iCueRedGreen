@@ -17,13 +17,14 @@ internal static class Program
     {
         ConfigureLogging();
         Logger logger = LogManager.GetCurrentClassLogger();
+        bool showDevUi = HasDevUiFlag(Environment.GetCommandLineArgs());
 
         try
         {
             // Log startup version for diagnostics.
             logger.Info("Start iCUERedGreen {0}", GetVersionString());
             ApplicationConfiguration.Initialize();
-            using TrayApplicationContext context = new TrayApplicationContext(logger);
+            using TrayApplicationContext context = new TrayApplicationContext(logger, showDevUi);
             Application.Run(context);
         }
         catch (Exception ex)
@@ -99,6 +100,29 @@ internal static class Program
         }
 
         config.RemoveTarget("console");
+    }
+
+    /// <summary>
+    /// Determines whether the dev UI should be visible.
+    /// </summary>
+    /// <param name="args">The command line arguments.</param>
+    /// <returns>True when the dev UI flag is present; otherwise false.</returns>
+    private static bool HasDevUiFlag(string[] args)
+    {
+        if (args is null || args.Length == 0)
+        {
+            return false;
+        }
+
+        foreach (string arg in args)
+        {
+            if (string.Equals(arg, "--dev-ui", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

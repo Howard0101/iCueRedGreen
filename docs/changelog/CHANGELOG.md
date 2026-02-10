@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.0.22 — 2026-02-10 22:34:41
+[Changed]
+- Hide Dev Mode controls unless the tray app is started with `--dev-ui`.
+
 ## 1.1.0.21 — 2026-02-10 22:11:10
 [Fixed]
 - Prevented polling from overwriting optimistic LED updates during toggles.

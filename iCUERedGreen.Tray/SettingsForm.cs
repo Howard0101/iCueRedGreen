@@ -66,14 +66,16 @@ internal sealed class SettingsForm : Form
     private readonly CheckBox _devModeCheckBox;
     private readonly Button _saveButton;
     private readonly ErrorProvider _errorProvider;
+    private readonly bool _showDevMode;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SettingsForm"/> class.
     /// </summary>
     /// <param name="model">The settings model.</param>
-    public SettingsForm(SettingsViewModel model)
+    public SettingsForm(SettingsViewModel model, bool showDevMode)
     {
         _model = model ?? throw new ArgumentNullException(nameof(model));
+        _showDevMode = showDevMode;
 
         Text = "iCUERedGreen Settings";
         StartPosition = FormStartPosition.CenterScreen;
@@ -175,7 +177,10 @@ internal sealed class SettingsForm : Form
 
         AddSpacerRow(layout, 8);
         AddCheckboxRow(layout, "Toggle on Scroll Lock keypress:", _toggleCheckBox);
-        AddCheckboxRow(layout, "Dev mode (enable env var fallback):", _devModeCheckBox);
+        if (_showDevMode)
+        {
+            AddCheckboxRow(layout, "Dev mode (enable env var fallback):", _devModeCheckBox);
+        }
 
         FlowLayoutPanel buttonPanel = BuildButtonPanel();
         layout.Controls.Add(buttonPanel, 0, layout.RowCount);
