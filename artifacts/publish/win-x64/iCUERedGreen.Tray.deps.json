@@ -1,18 +1,19 @@
 {
   "runtimeTarget": {
-    "name": ".NETCoreApp,Version=v8.0/win-x64",
+    "name": ".NETCoreApp,Version=v10.0/win-x64",
     "signature": ""
   },
   "compilationOptions": {},
   "targets": {
-    ".NETCoreApp,Version=v8.0": {},
-    ".NETCoreApp,Version=v8.0/win-x64": {
-      "iCUERedGreen/1.1.0.0": {
+    ".NETCoreApp,Version=v10.0": {},
+    ".NETCoreApp,Version=v10.0/win-x64": {
+      "iCUERedGreen.Tray/1.1.0.8": {
         "dependencies": {
-          "NLog": "6.1.0"
+          "NLog": "6.1.0",
+          "iCUERedGreen.Core": "1.0.0"
         },
         "runtime": {
-          "iCUERedGreen.dll": {}
+          "iCUERedGreen.Tray.dll": {}
         }
       },
       "NLog/6.1.0": {
@@ -22,11 +23,22 @@
             "fileVersion": "6.1.0.4914"
           }
         }
+      },
+      "iCUERedGreen.Core/1.0.0": {
+        "dependencies": {
+          "NLog": "6.1.0"
+        },
+        "runtime": {
+          "iCUERedGreen.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
       }
     }
   },
   "libraries": {
-    "iCUERedGreen/1.1.0.0": {
+    "iCUERedGreen.Tray/1.1.0.8": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -37,6 +49,11 @@
       "sha512": "sha512-K4UdxS4fuJeCM0sm+JTXWoJgOtcXX7X5kvE94bR07UB8JOB6A2+ski7q1tf2qdv+N0H3gsoWtteScJCHa3+zpw==",
       "path": "nlog/6.1.0",
       "hashPath": "nlog.6.1.0.nupkg.sha512"
+    },
+    "iCUERedGreen.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     }
   }
 }

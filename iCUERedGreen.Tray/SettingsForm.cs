@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
 
@@ -90,8 +91,8 @@ internal sealed class SettingsForm : Form
         _passwordTextBox.UseSystemPasswordChar = true;
         _intervalTextBox = CreateTextBox();
         _cueSdkPathTextBox = CreateTextBox();
-        _toggleCheckBox = new CheckBox { Text = "Toggle on Scroll Lock keypress" };
-        _devModeCheckBox = new CheckBox { Text = "Dev mode (enable env var fallback)" };
+        _toggleCheckBox = new CheckBox();
+        _devModeCheckBox = new CheckBox();
         _saveButton = new Button
         {
             Text = "Save",
@@ -106,6 +107,8 @@ internal sealed class SettingsForm : Form
         TableLayoutPanel layout = BuildLayout();
         Controls.Add(layout);
 
+        ConfigureCheckboxes();
+        ConfigureErrorProvider();
         ApplyModel();
         WireValidationEvents();
         UpdateValidationState();
@@ -170,15 +173,9 @@ internal sealed class SettingsForm : Form
         AddRow(layout, "Polling interval (seconds):", _intervalTextBox);
         AddRow(layout, "CUE SDK path:", _cueSdkPathTextBox);
 
-        layout.Controls.Add(_toggleCheckBox, 0, layout.RowCount);
-        layout.SetColumnSpan(_toggleCheckBox, 2);
-        layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        layout.RowCount++;
-
-        layout.Controls.Add(_devModeCheckBox, 0, layout.RowCount);
-        layout.SetColumnSpan(_devModeCheckBox, 2);
-        layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        layout.RowCount++;
+        AddSpacerRow(layout, 8);
+        AddCheckboxRow(layout, "Toggle on Scroll Lock keypress:", _toggleCheckBox);
+        AddCheckboxRow(layout, "Dev mode (enable env var fallback):", _devModeCheckBox);
 
         FlowLayoutPanel buttonPanel = BuildButtonPanel();
         layout.Controls.Add(buttonPanel, 0, layout.RowCount);
@@ -227,7 +224,12 @@ internal sealed class SettingsForm : Form
     /// <returns>The text box.</returns>
     private static TextBox CreateTextBox()
     {
-        return new TextBox { Anchor = AnchorStyles.Left | AnchorStyles.Right, Width = 320 };
+        return new TextBox
+        {
+            Anchor = AnchorStyles.Left | AnchorStyles.Right,
+            Width = 320,
+            Margin = new Padding(0, 3, 20, 3)
+        };
     }
 
     /// <summary>
@@ -249,6 +251,47 @@ internal sealed class SettingsForm : Form
         layout.Controls.Add(label, 0, layout.RowCount);
         layout.Controls.Add(input, 1, layout.RowCount);
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        layout.RowCount++;
+    }
+
+    /// <summary>
+    /// Adds a checkbox row to the layout panel.
+    /// </summary>
+    /// <param name="layout">The layout panel.</param>
+    /// <param name="labelText">The label text.</param>
+    /// <param name="checkBox">The checkbox control.</param>
+    private static void AddCheckboxRow(TableLayoutPanel layout, string labelText, CheckBox checkBox)
+    {
+        Label label = new Label
+        {
+            Text = labelText,
+            AutoSize = true,
+            Anchor = AnchorStyles.Left,
+            Padding = new Padding(0, 4, 0, 0)
+        };
+
+        layout.Controls.Add(label, 0, layout.RowCount);
+        layout.Controls.Add(checkBox, 1, layout.RowCount);
+        layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        layout.RowCount++;
+    }
+
+    /// <summary>
+    /// Adds a spacer row to the layout panel.
+    /// </summary>
+    /// <param name="layout">The layout panel.</param>
+    /// <param name="height">The spacer height in pixels.</param>
+    private static void AddSpacerRow(TableLayoutPanel layout, int height)
+    {
+        Panel spacer = new Panel
+        {
+            Height = height,
+            Dock = DockStyle.Fill
+        };
+
+        layout.Controls.Add(spacer, 0, layout.RowCount);
+        layout.SetColumnSpan(spacer, 2);
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, height));
         layout.RowCount++;
     }
 
@@ -281,6 +324,41 @@ internal sealed class SettingsForm : Form
         }
 
         return interval > 0;
+    }
+
+    /// <summary>
+    /// Configures checkbox alignment and spacing.
+    /// </summary>
+    private void ConfigureCheckboxes()
+    {
+        ConfigureCheckbox(_toggleCheckBox);
+        ConfigureCheckbox(_devModeCheckBox);
+    }
+
+    /// <summary>
+    /// Applies common checkbox settings.
+    /// </summary>
+    /// <param name="checkBox">The checkbox to configure.</param>
+    private void ConfigureCheckbox(CheckBox checkBox)
+    {
+        checkBox.Text = string.Empty;
+        checkBox.AutoSize = true;
+        checkBox.Anchor = AnchorStyles.Left;
+        checkBox.CheckAlign = ContentAlignment.MiddleLeft;
+        checkBox.Margin = new Padding(0, 3, 0, 3);
+    }
+
+    /// <summary>
+    /// Configures error provider icon padding for inputs.
+    /// </summary>
+    private void ConfigureErrorProvider()
+    {
+        _errorProvider.SetIconPadding(_hostTextBox, 4);
+        _errorProvider.SetIconPadding(_ainTextBox, 4);
+        _errorProvider.SetIconPadding(_usernameTextBox, 4);
+        _errorProvider.SetIconPadding(_passwordTextBox, 4);
+        _errorProvider.SetIconPadding(_intervalTextBox, 4);
+        _errorProvider.SetIconPadding(_cueSdkPathTextBox, 4);
     }
 
     /// <summary>

@@ -2,6 +2,11 @@ CHANGELOG (plain text)
 
 [Unreleased]
 
+[1.1.0.8 - 2026-02-10 19:38:13]
+[Fixed]
+- Improved settings layout spacing and checkbox alignment.
+- Ensured validation indicators remain visible beside all input fields.
+
 [1.1.0.7 - 2026-02-10 19:07:32]
 [Fixed]
 - Embedded tray icons to avoid missing runtime icon files.
