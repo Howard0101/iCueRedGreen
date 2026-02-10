@@ -9,9 +9,9 @@ Human-readable documentation lives under [docs/](docs/).
 The following documents are added when needed and linked here once they exist:
 <!--
 - Decisions: docs/DECISIONS.md
-- Migrations: docs/MIGRATIONS.md
 -->
 - Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Migrations: [docs/MIGRATIONS.md](docs/MIGRATIONS.md)
 - Usage & Configuration: [docs/USAGE.md](docs/USAGE.md)
 - Releases: [docs/RELEASES.md](docs/RELEASES.md)
 - Background Run (Task Scheduler): [docs/BACKGROUND_TASK_SCHEDULER.md](docs/BACKGROUND_TASK_SCHEDULER.md)
