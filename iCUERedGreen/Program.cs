@@ -608,6 +608,11 @@ internal static class Program
         {
             if (_controller is not null)
             {
+                if (!IsSessionHealthy())
+                {
+                    HandleCueFailure(new InvalidOperationException("iCUE session is not connected."));
+                }
+
                 return;
             }
 
@@ -635,6 +640,11 @@ internal static class Program
 
             try
             {
+                if (!IsSessionHealthy())
+                {
+                    return;
+                }
+
                 _controller.SetRed();
             }
             catch (Exception ex)
@@ -655,6 +665,11 @@ internal static class Program
 
             try
             {
+                if (!IsSessionHealthy())
+                {
+                    return;
+                }
+
                 _controller.SetGreen();
             }
             catch (Exception ex)
@@ -678,6 +693,11 @@ internal static class Program
 
             try
             {
+                if (!IsSessionHealthy())
+                {
+                    return false;
+                }
+
                 _controller.ReleaseControl();
                 return true;
             }
@@ -704,6 +724,31 @@ internal static class Program
 
             _wasUnavailable = true;
             _controller = null;
+        }
+
+        /// <summary>
+        /// Checks whether the iCUE session is healthy and connected.
+        /// </summary>
+        /// <returns>True when connected; otherwise false.</returns>
+        private bool IsSessionHealthy()
+        {
+            try
+            {
+                CorsairSessionState state = CorsairNative.CorsairGetSessionState();
+                if (state == CorsairSessionState.CSS_Connected)
+                {
+                    return true;
+                }
+
+                CorsairNative.CorsairDisconnect();
+                HandleCueFailure(new InvalidOperationException($"iCUE session state is {state}."));
+                return false;
+            }
+            catch (Exception ex)
+            {
+                HandleCueFailure(ex);
+                return false;
+            }
         }
 
         /// <summary>

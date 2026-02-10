@@ -2,6 +2,10 @@ CHANGELOG (plain text)
 
 [Unreleased]
 
+[1.0.2.4 - 2026-02-10 13:22:58]
+[Fixed]
+- Reconnect to iCUE after restarts by validating session health each poll.
+
 [1.0.2.3 - 2026-02-10 13:09:13]
 [Changed]
 - Enabled `--toggle-on-keypress` in the Task Scheduler XML templates.
