@@ -261,7 +261,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
             SetTrayStatus("iCUERedGreen: not configured");
             if (showErrors && !string.IsNullOrWhiteSpace(failureMessage))
             {
-                ShowMessage("Configuration missing", failureMessage);
+                ShowMessage("Configuration missing", failureMessage, MessageBoxIcon.Warning);
             }
 
             return;
@@ -287,7 +287,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
             SetTrayStatus("iCUERedGreen: failed to start");
             if (showErrors)
             {
-                ShowMessage("Worker failed to start", ex.Message);
+            ShowMessage("Worker failed to start", ex.Message, MessageBoxIcon.Error);
             }
         }
     }
@@ -440,7 +440,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     {
         if (_worker is null)
         {
-            ShowMessage("Worker not running", "Start the worker before toggling the switch.");
+            ShowMessage("Worker not running", "Start the worker before toggling the switch.", MessageBoxIcon.Warning);
             return;
         }
 
@@ -451,7 +451,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         catch (Exception ex)
         {
             _logger.Error(ex, "Toggle request failed.");
-            ShowMessage("Toggle failed", ex.Message);
+            ShowMessage("Toggle failed", ex.Message, MessageBoxIcon.Error);
         }
     }
 
@@ -497,7 +497,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         SettingsViewModel updated = form.GetUpdatedModel();
         if (!TryPersistSettings(updated, out string? failureMessage))
         {
-            ShowMessage("Save failed", failureMessage ?? "Settings could not be saved.");
+            ShowMessage("Save failed", failureMessage ?? "Settings could not be saved.", MessageBoxIcon.Warning);
             return;
         }
 
@@ -766,7 +766,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private void OnInfoRequested(object? sender, EventArgs e)
     {
         string version = typeof(TrayApplicationContext).Assembly.GetName().Version?.ToString() ?? "unknown";
-        ShowMessage("iCUERedGreen", $"Tray version: {version}");
+        ShowMessage("iCUERedGreen", $"Tray version: {version}", MessageBoxIcon.Information);
     }
 
     /// <summary>
@@ -794,11 +794,12 @@ internal sealed class TrayApplicationContext : ApplicationContext
     /// </summary>
     /// <param name="title">The dialog title.</param>
     /// <param name="message">The dialog message.</param>
-    private void ShowMessage(string title, string message)
+    /// <param name="icon">The message box icon.</param>
+    private void ShowMessage(string title, string message, MessageBoxIcon icon)
     {
         _uiContext.Post(_ =>
         {
-            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(message, title, MessageBoxButtons.OK, icon);
         }, null);
     }
 }
