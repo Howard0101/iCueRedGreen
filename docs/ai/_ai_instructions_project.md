@@ -12,6 +12,9 @@
 ## Local Publish Requirement
 - When updating the local deployment, always publish with `-p:IncludeCueSdk=true` (requires the SDK DLL to exist locally).
 
+## Release Workflow (Mandatory)
+- Follow `docs/ai/iCUERedGreen_release_workflow.md` for release + local update steps and prompts.
+
 Precedence:
 - This file is read AFTER all general instructions and references.
 - On conflict, this file overrides previously read rules.
