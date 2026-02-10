@@ -18,4 +18,5 @@ codex-session-id.txt
 # Local SDK files (not redistributed)
 iCUESDK/
 iCUERedGreen/Asset/iCUESDK*.dll
+iCUERedGreen.Cli/Asset/iCUESDK*.dll
 artifacts/publish/**/iCUESDK*.dll

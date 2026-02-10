@@ -20,6 +20,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly ToolStripMenuItem _devModeItem;
     private readonly ToolStripMenuItem _infoItem;
     private readonly ToolStripMenuItem _exitItem;
+    private readonly TrayIcons _icons;
     private readonly SemaphoreSlim _actionGate = new(1, 1);
     private readonly TraySettingsStore _settingsStore;
     private readonly CredentialStore _credentialStore;
@@ -48,10 +49,11 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _infoItem = new ToolStripMenuItem("Info...", null, OnInfoRequested);
         _exitItem = new ToolStripMenuItem("Exit", null, OnExitRequested);
 
+        _icons = TrayIcons.Load();
         ContextMenuStrip menu = BuildMenu();
         _notifyIcon = new NotifyIcon
         {
-            Icon = LoadIcon(),
+            Icon = _icons.Unknown,
             Visible = true,
             ContextMenuStrip = menu,
             Text = "iCUERedGreen: starting"
@@ -78,6 +80,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         {
             _notifyIcon.Visible = false;
             _notifyIcon.Dispose();
+            _icons.Dispose();
             _workerCts?.Dispose();
             _actionGate.Dispose();
         }
@@ -109,15 +112,85 @@ internal sealed class TrayApplicationContext : ApplicationContext
     /// Loads the tray icon from disk.
     /// </summary>
     /// <returns>The tray icon.</returns>
-    private static Icon LoadIcon()
+    private sealed class TrayIcons : IDisposable
     {
-        string iconPath = Path.Combine(AppContext.BaseDirectory, "iCUERedGreen.keyboard-dot.ico");
-        if (File.Exists(iconPath))
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TrayIcons"/> class.
+        /// </summary>
+        /// <param name="onIcon">The icon used when the switch is on.</param>
+        /// <param name="offIcon">The icon used when the switch is off.</param>
+        /// <param name="unknownIcon">The icon used when the switch state is unknown.</param>
+        /// <param name="fallbackIcon">The fallback icon.</param>
+        public TrayIcons(Icon onIcon, Icon offIcon, Icon unknownIcon, Icon fallbackIcon)
         {
-            return new Icon(iconPath);
+            On = onIcon ?? throw new ArgumentNullException(nameof(onIcon));
+            Off = offIcon ?? throw new ArgumentNullException(nameof(offIcon));
+            Unknown = unknownIcon ?? throw new ArgumentNullException(nameof(unknownIcon));
+            _fallback = fallbackIcon ?? throw new ArgumentNullException(nameof(fallbackIcon));
         }
 
-        return SystemIcons.Application;
+        /// <summary>
+        /// Gets the icon used when the switch is on.
+        /// </summary>
+        public Icon On { get; }
+
+        /// <summary>
+        /// Gets the icon used when the switch is off.
+        /// </summary>
+        public Icon Off { get; }
+
+        /// <summary>
+        /// Gets the icon used when the switch state is unknown.
+        /// </summary>
+        public Icon Unknown { get; }
+
+        private readonly Icon _fallback;
+
+        /// <summary>
+        /// Loads tray icons from the application directory.
+        /// </summary>
+        /// <returns>The loaded tray icons.</returns>
+        public static TrayIcons Load()
+        {
+            string baseDir = AppContext.BaseDirectory;
+            Icon fallback = LoadIcon(Path.Combine(baseDir, "iCUERedGreen.keyboard-dot.ico")) ?? SystemIcons.Application;
+            Icon onIcon = LoadIcon(Path.Combine(baseDir, "iCUERedGreen.keyboard-dot.on.ico")) ?? fallback;
+            Icon offIcon = LoadIcon(Path.Combine(baseDir, "iCUERedGreen.keyboard-dot.off.ico")) ?? fallback;
+            Icon unknownIcon = LoadIcon(Path.Combine(baseDir, "iCUERedGreen.keyboard-dot.unknown.ico")) ?? fallback;
+
+            return new TrayIcons(onIcon, offIcon, unknownIcon, fallback);
+        }
+
+        /// <summary>
+        /// Releases icon resources.
+        /// </summary>
+        public void Dispose()
+        {
+            On.Dispose();
+            Off.Dispose();
+            Unknown.Dispose();
+            if (!ReferenceEquals(_fallback, On)
+                && !ReferenceEquals(_fallback, Off)
+                && !ReferenceEquals(_fallback, Unknown))
+            {
+                _fallback.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Loads an icon from disk.
+        /// </summary>
+        /// <param name="path">The icon path.</param>
+        /// <returns>The icon, or null when missing.</returns>
+        private static Icon? LoadIcon(string path)
+        {
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            return new Icon(path);
+        }
     }
 
     /// <summary>
@@ -281,6 +354,21 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
         string cueLabel = snapshot.IsCueAvailable ? "iCUE OK" : "iCUE off";
         SetTrayStatus($"iCUERedGreen: {stateLabel} ({cueLabel})");
+        UpdateIcon(snapshot.State);
+    }
+
+    /// <summary>
+    /// Updates the tray icon based on the switch state.
+    /// </summary>
+    /// <param name="state">The current switch state.</param>
+    private void UpdateIcon(SwitchState state)
+    {
+        _notifyIcon.Icon = state switch
+        {
+            SwitchState.On => _icons.On,
+            SwitchState.Off => _icons.Off,
+            _ => _icons.Unknown
+        };
     }
 
     /// <summary>

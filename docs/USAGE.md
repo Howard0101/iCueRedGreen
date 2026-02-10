@@ -8,7 +8,8 @@ This document explains how to run `iCUERedGreen` and configure FRITZ!DECT 200 po
 - 64-bit CUE SDK DLL available (download separately; see References)
 
 ## Getting Started
-1. Set the required environment variables in PowerShell:
+1. Run `iCUERedGreen.Tray.exe` and open **Settings** to configure FRITZ credentials.
+2. (Dev-only CLI) Set the required environment variables in PowerShell:
 ```powershell
 $env:FRITZ_HOST="fritz.box"
 $env:FRITZ_USERNAME="your-user"
@@ -16,25 +17,25 @@ $env:FRITZ_PASSWORD="your-password"
 $env:FRITZ_AIN="12345 6789012"
 ```
 
-2. Run the app (from the project folder):
+3. (Dev-only CLI) Run the app (from the project folder):
 ```powershell
-dotnet run --project .\iCUERedGreen\iCUERedGreen.csproj -- --interval 5
+dotnet run --project .\iCUERedGreen.Cli\iCUERedGreen.Cli.csproj -- --interval 5
 ```
 
-3. Download the iCUE SDK from Corsair (see References). For builds/publish, place `iCUESDK.x64_2019.dll` in `iCUERedGreen\Asset\`.
+4. Download the iCUE SDK from Corsair (see References). For builds/publish, place `iCUESDK.x64_2019.dll` in `iCUERedGreen.Cli\Asset\`.
    - To include the DLL in publish output, run: `dotnet publish ... -p:IncludeCueSdk=true`.
-4. To run the published executable, place the CUE SDK DLL next to the exe or provide the path:
+5. To run the published CLI executable, place the CUE SDK DLL next to the exe or provide the path:
 ```powershell
-.\iCUERedGreen.exe --cuesdk-path "C:\Path\To\iCUESDK.x64_2019.dll"
+.\iCUERedGreen.Cli.exe --cuesdk-path "C:\Path\To\iCUESDK.x64_2019.dll"
 ```
 
 ## Path Placeholders
-- `<INSTALL_DIR>` = install directory containing `iCUERedGreen.exe`.
+- `<INSTALL_DIR>` = install directory containing `iCUERedGreen.Tray.exe`.
 - `<PUBLISH_DIR>` = local publish output folder (e.g., `artifacts\publish\win-x64`).
 - Optional: keep a local mapping in `docs/LOCAL_PATHS.md` (local-only; ignored by git).
 
 ## Configuration Precedence
-Configuration is resolved in this order:
+CLI configuration is resolved in this order:
 1. CLI arguments
 2. Environment variables
 3. `appsettings.json`
@@ -46,6 +47,7 @@ Configuration is resolved in this order:
 - `FRITZ_PASSWORD`
 - `FRITZ_AIN` (include spaces exactly as shown by FRITZ!Box)
 - `POLL_INTERVAL_SECONDS` (default: `5`)
+Note: Environment variables are only used when Dev Mode is enabled in the tray app or when running the CLI.
 
 ## Changing SYSTEM Environment Variables
 - SYSTEM environment variables are read when the process starts.
@@ -62,8 +64,27 @@ schtasks /Run /TN "iCUERedGreen"
 ```
 
 ## appsettings.json
-Place an `appsettings.json` next to the executable (or run from the project folder).
+Tray app settings are stored in `appsettings.json` next to the tray executable.
 Example structure:
+```json
+{
+  "DevMode": false,
+  "ToggleOnKeypress": false,
+  "Fritz": {
+    "Host": "",
+    "Ain": ""
+  },
+  "Polling": {
+    "IntervalSeconds": 5
+  },
+  "CueSdk": {
+    "Path": ""
+  }
+}
+```
+Credentials are stored in Windows Credential Manager and are not written to the settings file.
+
+CLI appsettings.json (dev-only) supports additional fields:
 ```json
 {
   "Fritz": {
@@ -82,6 +103,7 @@ Example structure:
 ```
 
 ## CLI Options
+These options apply to the dev-only CLI (`iCUERedGreen.Cli.exe`).
 ```
 --interval <sec>       Polling interval in seconds (default 5)
 --host <host>          FRITZ!Box host (e.g., fritz.box)
@@ -121,7 +143,7 @@ Example structure:
 
 ## Hidden Startup
 - The tray app is a WinForms executable and does not show a console window.
-- Use [iCUERedGreen/start-hidden.ps1](../iCUERedGreen/start-hidden.ps1) only for the console app.
+- Use [iCUERedGreen.Cli/start-hidden.ps1](../iCUERedGreen.Cli/start-hidden.ps1) only for the console app.
 - The Task Scheduler XML now runs `iCUERedGreen.Tray.exe` directly.
 
 ## Troubleshooting

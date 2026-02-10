@@ -1,9 +1,9 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iCUERedGreen", "iCUERedGreen\iCUERedGreen.csproj", "{90A8EEF8-C804-4AF2-8A45-BAB4C7E7DF12}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iCUERedGreen.Cli", "iCUERedGreen.Cli\iCUERedGreen.Cli.csproj", "{90A8EEF8-C804-4AF2-8A45-BAB4C7E7DF12}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iCUERedGreen.Tests", "iCUERedGreen.Tests\iCUERedGreen.Tests.csproj", "{4AF565CD-2834-4188-9A69-C4E3837BC5A7}"
 EndProject

@@ -63,6 +63,8 @@ internal sealed class SettingsForm : Form
     private readonly TextBox _cueSdkPathTextBox;
     private readonly CheckBox _toggleCheckBox;
     private readonly CheckBox _devModeCheckBox;
+    private readonly Button _saveButton;
+    private readonly ErrorProvider _errorProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SettingsForm"/> class.
@@ -90,11 +92,23 @@ internal sealed class SettingsForm : Form
         _cueSdkPathTextBox = CreateTextBox();
         _toggleCheckBox = new CheckBox { Text = "Toggle on Scroll Lock keypress" };
         _devModeCheckBox = new CheckBox { Text = "Dev mode (enable env var fallback)" };
+        _saveButton = new Button
+        {
+            Text = "Save",
+            DialogResult = DialogResult.OK
+        };
+        _errorProvider = new ErrorProvider
+        {
+            BlinkStyle = ErrorBlinkStyle.NeverBlink
+        };
+        _errorProvider.ContainerControl = this;
 
         TableLayoutPanel layout = BuildLayout();
         Controls.Add(layout);
 
         ApplyModel();
+        WireValidationEvents();
+        UpdateValidationState();
     }
 
     /// <summary>
@@ -186,18 +200,13 @@ internal sealed class SettingsForm : Form
             Text = "Exit",
             DialogResult = DialogResult.Cancel
         };
-        Button saveButton = new Button
-        {
-            Text = "Save",
-            DialogResult = DialogResult.OK
-        };
 
         exitButton.Anchor = AnchorStyles.Right;
-        saveButton.Anchor = AnchorStyles.Right;
-        saveButton.Click += OnSaveClicked;
+        _saveButton.Anchor = AnchorStyles.Right;
+        _saveButton.Click += OnSaveClicked;
 
         CancelButton = exitButton;
-        AcceptButton = saveButton;
+        AcceptButton = _saveButton;
 
         FlowLayoutPanel panel = new FlowLayoutPanel
         {
@@ -207,7 +216,7 @@ internal sealed class SettingsForm : Form
         };
 
         panel.Controls.Add(exitButton);
-        panel.Controls.Add(saveButton);
+        panel.Controls.Add(_saveButton);
 
         return panel;
     }
@@ -250,13 +259,9 @@ internal sealed class SettingsForm : Form
     /// <param name="e">The event args.</param>
     private void OnSaveClicked(object? sender, EventArgs e)
     {
-        if (!TryParseInterval(out _))
+        UpdateValidationState();
+        if (!_saveButton.Enabled)
         {
-            MessageBox.Show(
-                "Polling interval must be a positive integer.",
-                "Invalid value",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning);
             DialogResult = DialogResult.None;
         }
     }
@@ -276,5 +281,111 @@ internal sealed class SettingsForm : Form
         }
 
         return interval > 0;
+    }
+
+    /// <summary>
+    /// Wires validation handlers to inputs.
+    /// </summary>
+    private void WireValidationEvents()
+    {
+        _hostTextBox.TextChanged += (_, _) => UpdateValidationState();
+        _ainTextBox.TextChanged += (_, _) => UpdateValidationState();
+        _usernameTextBox.TextChanged += (_, _) => UpdateValidationState();
+        _passwordTextBox.TextChanged += (_, _) => UpdateValidationState();
+        _intervalTextBox.TextChanged += (_, _) => UpdateValidationState();
+        _devModeCheckBox.CheckedChanged += (_, _) => UpdateValidationState();
+    }
+
+    /// <summary>
+    /// Re-evaluates validation status and updates error messages.
+    /// </summary>
+    private void UpdateValidationState()
+    {
+        bool isValid = true;
+
+        isValid &= ValidateRequired(_hostTextBox, "FRITZ host is required.");
+        isValid &= ValidateRequired(_ainTextBox, "FRITZ AIN is required.");
+
+        string user = _usernameTextBox.Text.Trim();
+        string password = _passwordTextBox.Text;
+        bool devMode = _devModeCheckBox.Checked;
+
+        if (!devMode)
+        {
+            bool hasUser = !string.IsNullOrWhiteSpace(user);
+            bool hasPassword = !string.IsNullOrWhiteSpace(password);
+            if (!hasUser || !hasPassword)
+            {
+                _errorProvider.SetError(_usernameTextBox, "Username is required unless Dev Mode is enabled.");
+                _errorProvider.SetError(_passwordTextBox, "Password is required unless Dev Mode is enabled.");
+                isValid = false;
+            }
+            else
+            {
+                _errorProvider.SetError(_usernameTextBox, string.Empty);
+                _errorProvider.SetError(_passwordTextBox, string.Empty);
+            }
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(user) || !string.IsNullOrWhiteSpace(password))
+            {
+                if (string.IsNullOrWhiteSpace(user))
+                {
+                    _errorProvider.SetError(_usernameTextBox, "Username is required when a password is provided.");
+                    isValid = false;
+                }
+                else
+                {
+                    _errorProvider.SetError(_usernameTextBox, string.Empty);
+                }
+
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    _errorProvider.SetError(_passwordTextBox, "Password is required when a username is provided.");
+                    isValid = false;
+                }
+                else
+                {
+                    _errorProvider.SetError(_passwordTextBox, string.Empty);
+                }
+            }
+            else
+            {
+                _errorProvider.SetError(_usernameTextBox, string.Empty);
+                _errorProvider.SetError(_passwordTextBox, string.Empty);
+            }
+        }
+
+        if (!TryParseInterval(out int interval) || interval <= 0)
+        {
+            _errorProvider.SetError(_intervalTextBox, "Polling interval must be a positive integer.");
+            isValid = false;
+        }
+        else
+        {
+            _errorProvider.SetError(_intervalTextBox, string.Empty);
+        }
+
+        _saveButton.Enabled = isValid;
+    }
+
+    /// <summary>
+    /// Validates that a control contains a non-empty value.
+    /// </summary>
+    /// <param name="control">The control to validate.</param>
+    /// <param name="message">The error message to show.</param>
+    /// <returns>True when the control contains a value; otherwise false.</returns>
+    private bool ValidateRequired(Control control, string message)
+    {
+        string text = control.Text.Trim();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _errorProvider.SetError(control, message);
+            return false;
+        }
+
+        _errorProvider.SetError(control, string.Empty);
+        return true;
     }
 }

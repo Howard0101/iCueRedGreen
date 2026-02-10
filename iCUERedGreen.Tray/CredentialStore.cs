@@ -12,16 +12,18 @@ internal sealed class CredentialStore
     private const int MaxCredentialBlobSize = 512;
     private const uint CredTypeGeneric = 1;
     private const uint CredPersistLocalMachine = 2;
-    private const string TargetName = "iCUERedGreen/FritzPassword";
     private readonly Logger _logger;
+    private readonly string _targetName;
+    private const string DefaultTargetName = "iCUERedGreen/FritzPassword";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CredentialStore"/> class.
     /// </summary>
     /// <param name="logger">The logger to use.</param>
-    public CredentialStore(Logger logger)
+    public CredentialStore(Logger logger, string? targetName = null)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _targetName = string.IsNullOrWhiteSpace(targetName) ? DefaultTargetName : targetName;
     }
 
     /// <summary>
@@ -32,7 +34,7 @@ internal sealed class CredentialStore
     public bool TryRead(out CredentialEntry? entry)
     {
         entry = null;
-        if (!CredRead(TargetName, CredTypeGeneric, 0, out IntPtr credentialPtr))
+        if (!CredRead(_targetName, CredTypeGeneric, 0, out IntPtr credentialPtr))
         {
             int error = Marshal.GetLastWin32Error();
             if (error == 1168)
@@ -92,7 +94,7 @@ internal sealed class CredentialStore
             Credential credential = new Credential
             {
                 Type = CredTypeGeneric,
-                TargetName = TargetName,
+                TargetName = _targetName,
                 CredentialBlobSize = (uint)passwordBytes.Length,
                 CredentialBlob = passwordPtr,
                 Persist = CredPersistLocalMachine,
@@ -121,7 +123,7 @@ internal sealed class CredentialStore
     /// </summary>
     public void Delete()
     {
-        if (!CredDelete(TargetName, CredTypeGeneric, 0))
+        if (!CredDelete(_targetName, CredTypeGeneric, 0))
         {
             int error = Marshal.GetLastWin32Error();
             if (error == 1168)

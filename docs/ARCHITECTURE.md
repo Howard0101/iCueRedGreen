@@ -16,7 +16,7 @@ This document defines the target architecture for the tray-first application mod
 ## Project Structure
 1. `iCUERedGreen.Core` (class library)
 2. `iCUERedGreen.Tray` (WinForms tray app, primary host)
-3. `iCUERedGreen` (dev-only CLI host)
+3. `iCUERedGreen.Cli` (dev-only CLI host)
 
 ## Core Responsibilities
 - Poll FRITZ!DECT state and toggle on demand.
@@ -36,8 +36,8 @@ This document defines the target architecture for the tray-first application mod
   - `Fritz.Ain`
   - `Polling.IntervalSeconds`
   - `CueSdk.Path`
-  - `Features.ToggleOnKeypress`
-  - `Features.DevMode`
+  - `ToggleOnKeypress`
+  - `DevMode`
 - FRITZ username and password are not stored in JSON.
 
 ## Credential Manager
@@ -57,8 +57,8 @@ This document defines the target architecture for the tray-first application mod
 - Keyboard hook starts/stops with the worker.
 
 ## UI States
-- Tooltip: `iCUERedGreen — ON|OFF|UNKNOWN` + last update time.
-- Icon color indicates state (optional future enhancement).
+- Tooltip: `iCUERedGreen: ON|OFF|UNKNOWN` and iCUE availability.
+- Tray icon color indicates state.
 
 ## Autostart
 - Task Scheduler runs `iCUERedGreen.Tray.exe` at logon.

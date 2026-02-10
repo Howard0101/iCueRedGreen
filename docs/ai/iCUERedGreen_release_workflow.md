@@ -20,7 +20,7 @@ Purpose: repeatable release/publish flow plus required confirmation prompts.
 5. Update docs/RELEASES.md with new entry.
 6. Normalize line endings for touched files (exclude docs/task-scheduler/*.xml).
 7. Run tests: dotnet test .\\iCUERedGreen.sln.
-8. Publish: dotnet publish .\\iCUERedGreen\\iCUERedGreen.csproj -c Release -r win-x64 --self-contained false -o .\\artifacts\\publish\\win-x64 -p:IncludeCueSdk=true.
+8. Publish: dotnet publish .\\iCUERedGreen.Tray\\iCUERedGreen.Tray.csproj -c Release -r win-x64 --self-contained false -o .\\artifacts\\publish\\win-x64 -p:IncludeCueSdk=true.
 9. Run local update: pwsh -NoProfile -File .\\scripts\\update-published.ps1.
 10. Git status, stage, commit (Conventional Commits), push.
 

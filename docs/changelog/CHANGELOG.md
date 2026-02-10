@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## 1.1.0.5 — 2026-02-10 18:08:33
+[Changed]
+- Added XML documentation for tray validation and icon helpers.
+- Ignored local iCUE SDK DLLs under the CLI asset path.
+
+## 1.1.0.4 — 2026-02-10 17:58:28
+[Added]
+- Added tray icon variants and live state icon updates for ON/OFF/UNKNOWN.
+- Added inline settings validation for required fields.
+
+[Changed]
+- Renamed the dev-only console host to `iCUERedGreen.Cli` (including exe name).
+- Updated Credential Manager store to support test-specific targets.
+
+[Docs]
+- Updated usage and release workflow docs for tray + CLI naming.
+
+[Tests]
+- Added tray settings and Credential Manager tests (Windows-only).
+
 ## 1.1.0.3 — 2026-02-10 17:37:50
 [Changed]
 - Updated Task Scheduler XML to launch the tray app directly.

@@ -151,7 +151,7 @@ internal static class Program
         Console.WriteLine("iCUERedGreen - FRITZ!DECT 200 status to iCUE Scroll Lock LED");
         Console.WriteLine();
         Console.WriteLine("Usage:");
-        Console.WriteLine("  iCUERedGreen.exe [options]");
+        Console.WriteLine("  iCUERedGreen.Cli.exe [options]");
         Console.WriteLine();
         Console.WriteLine("Options:");
         Console.WriteLine("  --interval <sec>       Polling interval in seconds (default 5)");

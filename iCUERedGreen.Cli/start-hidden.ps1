@@ -1,10 +1,10 @@
 # Author: Sven Widowski
 # Copyright: Sven Widowski, 2026
-# Version: 1.0.0
+# Version: 1.0.1
 
 <#
 .SYNOPSIS
-  Starts iCUERedGreen.exe hidden and waits for it to exit.
+  Starts iCUERedGreen.Cli.exe hidden and waits for it to exit.
 #>
 
 [CmdletBinding()]
@@ -16,7 +16,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 if ([string]::IsNullOrWhiteSpace($ExecutablePath)) {
-  $ExecutablePath = Join-Path -Path $PSScriptRoot -ChildPath "iCUERedGreen.exe"
+  $ExecutablePath = Join-Path -Path $PSScriptRoot -ChildPath "iCUERedGreen.Cli.exe"
 }
 
 if (-not (Test-Path -LiteralPath $ExecutablePath)) {
