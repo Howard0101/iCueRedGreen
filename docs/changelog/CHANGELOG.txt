@@ -2,6 +2,10 @@ CHANGELOG (plain text)
 
 [Unreleased]
 
+[1.1.0.14 - 2026-02-10 20:23:58]
+[Fixed]
+- Apply optimistic LED updates on keypress to reduce perceived lag.
+
 [1.1.0.13 - 2026-02-10 20:18:32]
 [Added]
 - Logged tray startup version line for diagnostics.

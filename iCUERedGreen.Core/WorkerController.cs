@@ -20,6 +20,7 @@ public sealed class WorkerController
     private Task? _runTask;
     private PollingCoordinator? _coordinator;
     private CancellationToken _runToken;
+    private SwitchState _lastKnownState = SwitchState.Unknown;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="WorkerController"/> class.
@@ -55,6 +56,7 @@ public sealed class WorkerController
             throw new InvalidOperationException("Worker is already running.");
         }
 
+        _lastKnownState = SwitchState.Unknown;
         _runCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _runTask = RunInternalAsync(_runCts.Token);
         return _runTask;
@@ -101,6 +103,11 @@ public sealed class WorkerController
         if (coordinator is null)
         {
             throw new InvalidOperationException("Worker is not running.");
+        }
+
+        if (!TryOptimisticLedToggle())
+        {
+            _logger.Info("Skipping optimistic LED update (state unknown or iCUE unavailable).");
         }
 
         return coordinator.ToggleAndRefreshAsync(_runToken);
@@ -177,6 +184,28 @@ public sealed class WorkerController
             _runToken = default;
         }
     }
+
+    /// <summary>
+    /// Applies an optimistic LED update based on the last known state.
+    /// </summary>
+    /// <returns>True when an optimistic update was applied; otherwise false.</returns>
+    private bool TryOptimisticLedToggle()
+    {
+        PollingCoordinator? coordinator = _coordinator;
+        if (coordinator is null)
+        {
+            return false;
+        }
+
+        SwitchState nextState = _lastKnownState switch
+        {
+            SwitchState.On => SwitchState.Off,
+            SwitchState.Off => SwitchState.On,
+            _ => SwitchState.Unknown
+        };
+
+        return coordinator.TryApplyOptimisticLed(nextState);
+    }
     /// <summary>
     /// Executes a single poll cycle.
     /// </summary>
@@ -251,6 +280,7 @@ public sealed class WorkerController
 
         // Log only on transitions to reduce log noise.
         _logger.Info("Switch state: {0}", label);
+        _lastKnownState = newState;
 
         SwitchStateSnapshot snapshot = new SwitchStateSnapshot(newState, DateTimeOffset.UtcNow, cueSession.IsAvailable);
         OnSwitchStateChanged(new SwitchStateChangedEventArgs(lastState, snapshot));
@@ -264,6 +294,7 @@ public sealed class WorkerController
     {
         SwitchStateChanged?.Invoke(this, args);
     }
+
 
     /// <summary>
     /// Logs switch state failures only when the failure changes.
@@ -295,6 +326,30 @@ public sealed class WorkerController
         _wasInError = false;
         _lastErrorSignature = null;
         _logger.Info("Switch state recovered.");
+    }
+
+    /// <summary>
+    /// Logs when an optimistic LED update does not match the refreshed state.
+    /// </summary>
+    /// <param name="optimisticState">The optimistic state used for the LED.</param>
+    /// <param name="actualState">The refreshed switch state.</param>
+    private void LogOptimisticMismatch(SwitchState optimisticState, SwitchState actualState)
+    {
+        string optimisticLabel = optimisticState switch
+        {
+            SwitchState.On => "ON",
+            SwitchState.Off => "OFF",
+            _ => "UNKNOWN"
+        };
+
+        string actualLabel = actualState switch
+        {
+            SwitchState.On => "ON",
+            SwitchState.Off => "OFF",
+            _ => "UNKNOWN"
+        };
+
+        _logger.Warn("Optimistic LED state {0} did not match refresh ({1}).", optimisticLabel, actualLabel);
     }
 
     /// <summary>
@@ -450,6 +505,7 @@ public sealed class WorkerController
         private readonly Logger _logger;
         private readonly SemaphoreSlim _gate = new(1, 1);
         private SwitchState _lastState = SwitchState.Unknown;
+        private SwitchState _lastOptimisticState = SwitchState.Unknown;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PollingCoordinator"/> class.
@@ -487,6 +543,36 @@ public sealed class WorkerController
         }
 
         /// <summary>
+        /// Applies an optimistic LED update when iCUE is available.
+        /// </summary>
+        /// <param name="targetState">The expected next state.</param>
+        /// <returns>True when the LED update was applied; otherwise false.</returns>
+        public bool TryApplyOptimisticLed(SwitchState targetState)
+        {
+            if (targetState == SwitchState.Unknown)
+            {
+                return false;
+            }
+
+            if (!_cueSession.IsAvailable)
+            {
+                return false;
+            }
+
+            _lastOptimisticState = targetState;
+            if (targetState == SwitchState.On)
+            {
+                _cueSession.SetRed();
+            }
+            else
+            {
+                _cueSession.SetGreen();
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Executes a serialized operation against the FRITZ!Box API.
         /// </summary>
         /// <param name="action">The action to execute.</param>
@@ -517,6 +603,13 @@ public sealed class WorkerController
                 _fritz,
                 _lastState,
                 cancellationToken).ConfigureAwait(false);
+
+            if (_lastOptimisticState != SwitchState.Unknown && _lastState != _lastOptimisticState)
+            {
+                _owner.LogOptimisticMismatch(_lastOptimisticState, _lastState);
+            }
+
+            _lastOptimisticState = SwitchState.Unknown;
         }
 
         /// <summary>
