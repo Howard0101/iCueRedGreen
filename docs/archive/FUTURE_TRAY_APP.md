@@ -1,5 +1,7 @@
 # Future: Tray App
 
+Archived: 2026-02-10 — Tray app implemented; retained for reference.
+
 This note tracks the future implementation of a small tray application.
 
 ## Goal

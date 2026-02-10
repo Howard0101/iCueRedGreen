@@ -1,5 +1,7 @@
 # Migrations
 
+Archived: 2026-02-10 — Migration completed; retained for reference.
+
 ## 2026-02-10 — Tray-First Redesign (Planned)
 
 ### Summary

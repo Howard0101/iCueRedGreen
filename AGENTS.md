@@ -24,7 +24,6 @@ On conflict, project instructions override any previously read rules.
   - `docs/DECISIONS.md`
   - `docs/RELEASES.md`
   - `docs/ARCHITECTURE.md`
-  - `docs/MIGRATIONS.md`
 
 ## Template & Project Instructions (must load last)
 

@@ -1,5 +1,7 @@
 # Tray-First Migration Checklist (Draft)
 
+Archived: 2026-02-10 — Migration completed; retained for reference.
+
 ## Phase A — Core Extraction (Complete)
 1. [x] Create `iCUERedGreen.Core` project (class library, net10.0).
 2. [x] Move FRITZ client, polling loop, iCUE control, keyboard hook to Core.
