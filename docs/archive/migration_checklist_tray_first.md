@@ -32,5 +32,5 @@ Archived: 2026-02-10 — Migration completed; retained for reference.
 3. [x] Changelog entries for refactor + tray release.
 
 ## Phase F — Release (Pending)
-1. [ ] Set production version to `2.0.0.0` when tray app is stable.
-2. [ ] Publish tray app only.
+1. [x] Set production version to `2.0.0.0` when tray app is stable.
+2. [x] Publish tray app only.

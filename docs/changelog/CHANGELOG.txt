@@ -2,6 +2,10 @@ CHANGELOG (plain text)
 
 [Unreleased]
 
+[2.0.0.0 - 2026-02-10 22:48:12]
+[Changed]
+- Set production release version to 2.0.0.0.
+
 [1.1.0.22 - 2026-02-10 22:34:41]
 [Changed]
 - Hide Dev Mode controls unless the tray app is started with --dev-ui.
