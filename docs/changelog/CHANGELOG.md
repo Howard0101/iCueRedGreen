@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.0.13 — 2026-02-10 20:18:32
+[Added]
+- Logged tray startup version line for diagnostics.
+
 ## 1.1.0.12 — 2026-02-10 20:12:21
 [Fixed]
 - Debounced Scroll Lock key toggles to avoid queued delays.

@@ -20,6 +20,8 @@ internal static class Program
 
         try
         {
+            // Log startup version for diagnostics.
+            logger.Info("Start iCUERedGreen {0}", GetVersionString());
             ApplicationConfiguration.Initialize();
             using TrayApplicationContext context = new TrayApplicationContext(logger);
             Application.Run(context);
@@ -97,5 +99,15 @@ internal static class Program
         }
 
         config.RemoveTarget("console");
+    }
+
+    /// <summary>
+    /// Gets the current version string.
+    /// </summary>
+    /// <returns>The version string.</returns>
+    private static string GetVersionString()
+    {
+        System.Version? info = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        return info?.ToString() ?? "unknown";
     }
 }
