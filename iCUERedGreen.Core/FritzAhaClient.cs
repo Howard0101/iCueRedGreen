@@ -22,20 +22,20 @@ internal sealed class FritzAhaClient : IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="FritzAhaClient"/> class.
     /// </summary>
-    /// <param name="options">Resolved options containing FRITZ!Box settings.</param>
+    /// <param name="settings">Resolved settings containing FRITZ!Box settings.</param>
     /// <param name="logger">The logger to use.</param>
-    public FritzAhaClient(Options options, Logger logger)
+    public FritzAhaClient(WorkerSettings settings, Logger logger)
     {
-        if (options is null)
+        if (settings is null)
         {
-            throw new ArgumentNullException(nameof(options));
+            throw new ArgumentNullException(nameof(settings));
         }
 
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _host = options.FritzHost ?? throw new ArgumentNullException(nameof(options.FritzHost));
-        _username = options.FritzUsername ?? throw new ArgumentNullException(nameof(options.FritzUsername));
-        _password = options.FritzPassword ?? throw new ArgumentNullException(nameof(options.FritzPassword));
-        _ain = options.FritzAin ?? throw new ArgumentNullException(nameof(options.FritzAin));
+        _host = settings.FritzHost ?? throw new ArgumentNullException(nameof(settings.FritzHost));
+        _username = settings.FritzUsername ?? throw new ArgumentNullException(nameof(settings.FritzUsername));
+        _password = settings.FritzPassword ?? throw new ArgumentNullException(nameof(settings.FritzPassword));
+        _ain = settings.FritzAin ?? throw new ArgumentNullException(nameof(settings.FritzAin));
 
         _httpClient = new HttpClient
         {

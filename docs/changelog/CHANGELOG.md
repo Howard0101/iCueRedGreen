@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.1.0.1 — 2026-02-10 15:40:33
+[Changed]
+- Target framework upgraded to net10.0.
+- Added global.json to pin the .NET 10 SDK.
+- Updated migration checklist for net10.0.
+
 ## 1.1.0.0 — 2026-02-10 13:40:28
 [Changed]
 - Set production release version to 1.1.0.0.
