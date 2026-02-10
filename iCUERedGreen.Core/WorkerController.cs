@@ -141,7 +141,7 @@ public sealed class WorkerController
         {
             using KeyboardHookRunner? hook = _settings.ToggleOnKeypress
                 ? KeyboardHookRunner.TryStart(
-                    () => coordinator.ToggleAndRefreshAsync(cancellationToken),
+                    () => ToggleAsync(),
                     _logger)
                 : null;
 

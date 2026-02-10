@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.0.16 — 2026-02-10 20:40:12
+[Fixed]
+- Keyboard hook now uses the optimistic toggle path for immediate LED updates.
+
 ## 1.1.0.15 — 2026-02-10 20:35:40
 [Fixed]
 - Track last-known switch state on every poll to enable immediate LED updates.
