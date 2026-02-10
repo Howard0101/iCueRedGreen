@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.0.9 — 2026-02-10 19:51:32
+[Fixed]
+- Prefilled FRITZ host and AIN from env vars when Dev Mode is enabled.
+
 ## 1.1.0.8 — 2026-02-10 19:38:13
 [Fixed]
 - Improved settings layout spacing and checkbox alignment.

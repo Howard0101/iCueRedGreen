@@ -473,11 +473,13 @@ internal sealed class TrayApplicationContext : ApplicationContext
     {
         TraySettings settings = _settingsStore.LoadOrDefault(_logger);
         CredentialEntry? credentialEntry = GetCredentialEntry(settings.DevMode);
+        string? envHost = settings.DevMode ? GetEnvironmentVariable("FRITZ_HOST") : null;
+        string? envAin = settings.DevMode ? GetEnvironmentVariable("FRITZ_AIN") : null;
 
         SettingsViewModel model = new SettingsViewModel
         {
-            FritzHost = settings.Fritz.Host,
-            FritzAin = settings.Fritz.Ain,
+            FritzHost = string.IsNullOrWhiteSpace(settings.Fritz.Host) ? envHost : settings.Fritz.Host,
+            FritzAin = string.IsNullOrWhiteSpace(settings.Fritz.Ain) ? envAin : settings.Fritz.Ain,
             FritzUsername = credentialEntry?.UserName,
             FritzPassword = credentialEntry?.Password,
             IntervalSeconds = settings.Polling.IntervalSeconds,
