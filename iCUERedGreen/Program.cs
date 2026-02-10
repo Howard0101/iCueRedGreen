@@ -734,14 +734,14 @@ internal static class Program
         {
             try
             {
-                CorsairSessionState state = CorsairNative.CorsairGetSessionState();
-                if (state == CorsairSessionState.CSS_Connected)
+                CorsairError result = CorsairNative.CorsairGetSessionDetails(out _);
+                if (result == CorsairError.CE_Success)
                 {
                     return true;
                 }
 
                 CorsairNative.CorsairDisconnect();
-                HandleCueFailure(new InvalidOperationException($"iCUE session state is {state}."));
+                HandleCueFailure(new InvalidOperationException($"CorsairGetSessionDetails failed: {result}."));
                 return false;
             }
             catch (Exception ex)

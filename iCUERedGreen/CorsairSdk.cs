@@ -372,12 +372,6 @@ internal static class CorsairNative
     [DllImport("CUESDK", CallingConvention = CallingConvention.Cdecl)]
     internal static extern CorsairError CorsairGetSessionDetails(out CorsairSessionDetails details);
 
-    /// <summary>
-    /// Retrieves the current session state.
-    /// </summary>
-    /// <returns>The session state.</returns>
-    [DllImport("CUESDK", CallingConvention = CallingConvention.Cdecl)]
-    internal static extern CorsairSessionState CorsairGetSessionState();
 
     /// <summary>
     /// Disconnects from the iCUE SDK.
