@@ -44,7 +44,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _toggleItem = new ToolStripMenuItem("Toggle Switch", null, OnToggleRequested);
         _settingsItem = new ToolStripMenuItem("Settings...", null, OnSettingsRequested);
         _restartItem = new ToolStripMenuItem("Restart Worker", null, OnRestartRequested);
-        _openLogsItem = new ToolStripMenuItem("Open Logs", null, OnOpenLogsRequested);
+        _openLogsItem = new ToolStripMenuItem("Open Log", null, OnOpenLogsRequested);
         _devModeItem = new ToolStripMenuItem("Dev Mode", null, OnDevModeToggled) { CheckOnClick = true };
         _infoItem = new ToolStripMenuItem("Info...", null, OnInfoRequested);
         _exitItem = new ToolStripMenuItem("Exit", null, OnExitRequested);
@@ -699,7 +699,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     }
 
     /// <summary>
-    /// Handles the open logs menu click.
+    /// Handles the open log menu click.
     /// </summary>
     /// <param name="sender">The event source.</param>
     /// <param name="e">The event args.</param>
@@ -709,18 +709,22 @@ internal sealed class TrayApplicationContext : ApplicationContext
     }
 
     /// <summary>
-    /// Opens the log folder or file.
+    /// Opens the log file with the OS-associated app.
     /// </summary>
     /// <returns>A completed task.</returns>
     private Task OpenLogsAsync()
     {
         string logPath = Path.Combine(AppContext.BaseDirectory, "logs", "iCUERedGreen.log");
-        string target = File.Exists(logPath) ? logPath : Path.GetDirectoryName(logPath) ?? AppContext.BaseDirectory;
+        if (!File.Exists(logPath))
+        {
+            ShowMessage("Log file missing", "The log file does not exist yet.", MessageBoxIcon.Warning);
+            return Task.CompletedTask;
+        }
 
+        // Open the log with the default associated application.
         ProcessStartInfo startInfo = new ProcessStartInfo
         {
-            FileName = "explorer.exe",
-            Arguments = File.Exists(logPath) ? $"/select,\"{logPath}\"" : $"\"{target}\"",
+            FileName = logPath,
             UseShellExecute = true
         };
 

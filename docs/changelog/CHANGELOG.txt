@@ -2,6 +2,10 @@ CHANGELOG (plain text)
 
 [Unreleased]
 
+[1.1.0.17 - 2026-02-10 20:52:22]
+[Fixed]
+- Open Log now opens the log file with the associated app and warns if missing.
+
 [1.1.0.16 - 2026-02-10 20:40:12]
 [Fixed]
 - Keyboard hook now uses the optimistic toggle path for immediate LED updates.
