@@ -100,6 +100,7 @@ Example structure:
 - If the switch state is unknown or an error occurs, the app releases control so iCUE returns to its default lighting.
 - If iCUE is not running, the app still polls/toggles the switch but LED control is disabled (neutral).
 - When iCUE starts later, LED control resumes automatically.
+- If iCUE was restarted, the next poll will reconnect and re-enable LED updates.
 - When using `--toggle-on-keypress`, disable any iCUE scripts bound to Scroll Lock to avoid double triggers.
 - The app uses shared iCUE control and only overrides the Scroll Lock LED; other lighting remains under iCUE control.
 

@@ -32,6 +32,7 @@ This guide runs `iCUERedGreen` automatically at user logon, hidden in the backgr
 ## Notes
 - iCUE must be running in the same user session for LED updates.
 - If iCUE is not running, the switch toggle still works but LED control is disabled.
+- After iCUE restarts, the next poll reconnects and restores LED updates.
 - Use `appsettings.json` next to the exe or environment variables for FRITZ credentials.
 - Logs are written to `logs\iCUERedGreen.log` next to the executable; console logging is disabled for non-interactive runs.
 - Log rotation keeps a single backup file (`iCUERedGreen.log.1`) when the active log exceeds 2 MB.
