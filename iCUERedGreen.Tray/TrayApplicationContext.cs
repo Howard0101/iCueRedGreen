@@ -265,7 +265,8 @@ internal sealed class TrayApplicationContext : ApplicationContext
             _worker = new WorkerController(settings, _logger);
             _worker.SwitchStateChanged += OnSwitchStateChanged;
             _workerTask = _worker.StartAsync(_workerCts.Token);
-            _workerTask.ContinueWith(
+            // Fire-and-forget the continuation that logs background task faults.
+            _ = _workerTask.ContinueWith(
                 task => LogWorkerFault(task.Exception),
                 TaskScheduler.Default);
 

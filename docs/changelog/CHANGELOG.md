@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.0.6 — 2026-02-10 18:12:37
+[Changed]
+- Explicitly discard the worker-fault continuation task to silence CS4014.
+
 ## 1.1.0.5 — 2026-02-10 18:08:33
 [Changed]
 - Added XML documentation for tray validation and icon helpers.
