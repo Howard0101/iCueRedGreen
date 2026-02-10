@@ -1,6 +1,6 @@
 # Run in Background (Task Scheduler)
 
-This guide runs `iCUERedGreen` automatically at user logon, hidden in the background.
+This guide runs the tray app automatically at user logon.
 
 ## Steps
 1. Open **Task Scheduler**.
@@ -13,8 +13,7 @@ This guide runs `iCUERedGreen` automatically at user logon, hidden in the backgr
    - New... → Begin the task: **At log on**
 5. **Actions** tab:
    - New... → Action: **Start a program**
-   - Program/script: `powershell.exe`
-   - Add arguments: `-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "<INSTALL_DIR>\start-hidden.ps1"`
+   - Program/script: `<INSTALL_DIR>\iCUERedGreen.Tray.exe`
    - Start in: `<INSTALL_DIR>\`
 6. **Conditions** tab:
    - Uncheck “Start the task only if the computer is on AC power” (optional)
@@ -33,11 +32,13 @@ This guide runs `iCUERedGreen` automatically at user logon, hidden in the backgr
 - iCUE must be running in the same user session for LED updates.
 - If iCUE is not running, the switch toggle still works but LED control is disabled.
 - After iCUE restarts, the next poll reconnects and restores LED updates.
-- Use `appsettings.json` next to the exe or environment variables for FRITZ credentials.
+- Use `appsettings.json` next to the tray exe for non-secret settings.
+- FRITZ credentials are stored in Windows Credential Manager (set in the tray Settings).
+- Environment variable fallback is only used when Dev Mode is enabled in Settings.
 - Logs are written to `logs\iCUERedGreen.log` next to the executable; console logging is disabled for non-interactive runs.
 - Log rotation keeps a single backup file (`iCUERedGreen.log.1`) when the active log exceeds 2 MB.
 - To stop the task gracefully, delete `running.txt` next to the executable.
-- When using `--toggle-on-keypress`, disable any iCUE scripts bound to Scroll Lock to avoid double triggers.
+- When using toggle-on-keypress (tray Settings), disable any iCUE scripts bound to Scroll Lock to avoid double triggers.
 - On startup, a stale `running.txt` (heartbeat older than the last system boot) is removed automatically.
 - If you change SYSTEM environment variables, restart the scheduled task (or log off/on) to apply them.
 - Example (elevated PowerShell):
@@ -50,4 +51,4 @@ setx /M POLL_INTERVAL_SECONDS "5"
 schtasks /End /TN "iCUERedGreen"
 schtasks /Run /TN "iCUERedGreen"
 ```
-- `<INSTALL_DIR>` is the install directory containing `iCUERedGreen.exe`.
+- `<INSTALL_DIR>` is the install directory containing `iCUERedGreen.Tray.exe`.

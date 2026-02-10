@@ -120,8 +120,9 @@ Example structure:
 - It preserves `appsettings.json`, `nlog.config`, and `logs\` by default.
 
 ## Hidden Startup
-- Use [iCUERedGreen/start-hidden.ps1](../iCUERedGreen/start-hidden.ps1) next to the executable to run without a visible console window.
-- The Task Scheduler XML already references this launcher.
+- The tray app is a WinForms executable and does not show a console window.
+- Use [iCUERedGreen/start-hidden.ps1](../iCUERedGreen/start-hidden.ps1) only for the console app.
+- The Task Scheduler XML now runs `iCUERedGreen.Tray.exe` directly.
 
 ## Troubleshooting
 - iCUE not running: The app continues without LED control. Start iCUE to re-enable LED updates. If you see `ServerNotFound` during handshake, iCUE is not available.

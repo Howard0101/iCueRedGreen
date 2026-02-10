@@ -2,6 +2,13 @@ CHANGELOG (plain text)
 
 [Unreleased]
 
+[1.1.0.3 - 2026-02-10 17:37:50]
+[Changed]
+- Updated Task Scheduler XML to launch the tray app directly.
+[Docs]
+- Updated Task Scheduler background instructions for the tray app.
+- Clarified hidden startup guidance for the tray app.
+
 [1.1.0.2 - 2026-02-10 16:29:40]
 [Added]
 - Added a WinForms tray app project with menu controls and a settings dialog.
