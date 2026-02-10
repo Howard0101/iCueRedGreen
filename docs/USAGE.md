@@ -125,6 +125,7 @@ These options apply to the dev-only CLI (`iCUERedGreen.Cli.exe`).
 - If iCUE was restarted, the next poll will reconnect and re-enable LED updates.
 - When using `--toggle-on-keypress`, disable any iCUE scripts bound to Scroll Lock to avoid double triggers.
 - The app uses shared iCUE control and only overrides the Scroll Lock LED; other lighting remains under iCUE control.
+- Rapid successive Scroll Lock key presses can temporarily desync the Scroll Lock LED/indicator from the FRITZ switch state until the next poll completes.
 
 ## Logging
 - Logs are written to `logs\iCUERedGreen.log` next to the executable.
