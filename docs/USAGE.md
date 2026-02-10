@@ -109,6 +109,7 @@ Example structure:
 - The app writes a heartbeat file named `running.txt` next to the executable.
 - Delete `running.txt` to request a graceful stop.
 - The file is updated on each poll to show the latest heartbeat timestamp.
+- On startup, a stale `running.txt` (heartbeat older than the last system boot) is deleted automatically.
 
 ## Update Script
 - `scripts\update-published.ps1` (local-only; ignored by git) updates the published deployment in `<INSTALL_DIR>`.

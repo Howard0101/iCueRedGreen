@@ -1,6 +1,15 @@
 CHANGELOG (plain text)
 
 [Unreleased]
+
+[1.0.2.1 - 2026-02-10 09:44:27]
+[Fixed]
+- Remove stale running.txt markers from previous boots before starting.
+
+[Docs]
+- Documented stale running.txt cleanup behavior.
+
+[1.0.2.0 - 2026-02-06 17:03:14]
 [Changed]
 - Removed iCUE SDK files from the repository; use a local SDK download.
 - Made SDK DLL inclusion an explicit opt-in (`IncludeCueSdk=true`).

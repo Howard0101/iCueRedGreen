@@ -35,6 +35,7 @@ This guide runs `iCUERedGreen` automatically at user logon, hidden in the backgr
 - Logs are written to `logs\iCUERedGreen.log` next to the executable; console logging is disabled for non-interactive runs.
 - Log rotation keeps a single backup file (`iCUERedGreen.log.1`) when the active log exceeds 2 MB.
 - To stop the task gracefully, delete `running.txt` next to the executable.
+- On startup, a stale `running.txt` (heartbeat older than the last system boot) is removed automatically.
 - If you change SYSTEM environment variables, restart the scheduled task (or log off/on) to apply them.
 - Example (elevated PowerShell):
 ```powershell

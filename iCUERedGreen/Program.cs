@@ -1,3 +1,4 @@
+using System.Globalization;
 using NLog;
 
 namespace iCUERedGreen;
@@ -123,6 +124,7 @@ internal static class Program
         CancellationToken cancellationToken)
     {
         string runningFilePath = GetRunningFilePath();
+        CleanupStaleRunningFile(runningFilePath, logger);
         WriteHeartbeat(runningFilePath);
 
         SwitchState lastState = SwitchState.Unknown;
@@ -294,6 +296,81 @@ internal static class Program
     {
         string payload = $"LastHeartbeatUtc: {DateTimeOffset.UtcNow:O}";
         File.WriteAllText(path, payload);
+    }
+
+    /// <summary>
+    /// Removes a stale running marker file from a previous boot.
+    /// </summary>
+    /// <param name="path">The running file path.</param>
+    /// <param name="logger">The logger to use.</param>
+    private static void CleanupStaleRunningFile(string path, Logger logger)
+    {
+        if (!File.Exists(path))
+        {
+            return;
+        }
+
+        if (!TryReadHeartbeatUtc(path, out DateTimeOffset heartbeatUtc))
+        {
+            logger.Warn("Running file heartbeat invalid; deleting stale marker.");
+            TryDeleteRunningFile(path, logger);
+            return;
+        }
+
+        // Treat any heartbeat before the last boot as stale.
+        DateTimeOffset bootTimeUtc = DateTimeOffset.UtcNow - TimeSpan.FromMilliseconds(Environment.TickCount64);
+        if (heartbeatUtc < bootTimeUtc)
+        {
+            logger.Warn("Running file heartbeat predates last boot; deleting stale marker.");
+            TryDeleteRunningFile(path, logger);
+        }
+    }
+
+    /// <summary>
+    /// Reads the heartbeat value from the running marker file.
+    /// </summary>
+    /// <param name="path">The running file path.</param>
+    /// <param name="heartbeatUtc">The parsed heartbeat timestamp.</param>
+    /// <returns>True when the heartbeat can be parsed; otherwise false.</returns>
+    private static bool TryReadHeartbeatUtc(string path, out DateTimeOffset heartbeatUtc)
+    {
+        heartbeatUtc = default;
+
+        string content;
+        try
+        {
+            content = File.ReadAllText(path).Trim();
+        }
+        catch
+        {
+            return false;
+        }
+
+        const string Prefix = "LastHeartbeatUtc:";
+        if (!content.StartsWith(Prefix, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        string value = content[Prefix.Length..].Trim();
+        return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out heartbeatUtc);
+    }
+
+    /// <summary>
+    /// Deletes the running marker file and logs a warning when deletion fails.
+    /// </summary>
+    /// <param name="path">The running file path.</param>
+    /// <param name="logger">The logger to use.</param>
+    private static void TryDeleteRunningFile(string path, Logger logger)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception ex)
+        {
+            logger.Warn(ex, "Failed to delete stale running file.");
+        }
     }
 
     /// <summary>
