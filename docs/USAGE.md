@@ -4,7 +4,7 @@ This document explains how to run `iCUERedGreen` and configure FRITZ!DECT 200 po
 
 ## Prerequisites
 - Windows 10/11
-- iCUE running in the user session
+- iCUE running in the user session (required for LED updates; optional for switch toggling)
 - 64-bit CUE SDK DLL available (download separately; see References)
 
 ## Getting Started
@@ -88,16 +88,19 @@ Example structure:
 --username <user>      FRITZ!Box username
 --ain <ain>            FRITZ!DECT AIN (include spaces)
 --cuesdk-path <path>   Path to CUE SDK DLL
+--toggle-on-keypress   Toggle the switch on Scroll Lock keypress
 --no-toggle            Reserved for future use
 --version              Show version information
 --help                 Show help
 ```
 
 ## Notes
-- The Scroll Lock LED must be exposed by your keyboard in the CUE SDK; otherwise the app fails fast.
+- The Scroll Lock LED must be exposed by your keyboard in the CUE SDK; otherwise LED control stays disabled.
 - LED mapping: ON → red, OFF → green.
 - If the switch state is unknown or an error occurs, the app releases control so iCUE returns to its default lighting.
-- `--toggle-on-keypress` is intentionally not implemented yet and reserved for a future update.
+- If iCUE is not running, the app still polls/toggles the switch but LED control is disabled (neutral).
+- When iCUE starts later, LED control resumes automatically.
+- When using `--toggle-on-keypress`, disable any iCUE scripts bound to Scroll Lock to avoid double triggers.
 - The app uses shared iCUE control and only overrides the Scroll Lock LED; other lighting remains under iCUE control.
 
 ## Logging
@@ -120,9 +123,9 @@ Example structure:
 - The Task Scheduler XML already references this launcher.
 
 ## Troubleshooting
-- iCUE not running: Start iCUE and retry. If you see `ServerNotFound` during handshake, iCUE is not available.
+- iCUE not running: The app continues without LED control. Start iCUE to re-enable LED updates. If you see `ServerNotFound` during handshake, iCUE is not available.
 - No control permission: If you see `NoControl`, open iCUE and grant SDK control for the device profile.
-- Scroll Lock LED missing: The app fails fast if `CorsairLedId_ScrollLock` is not in the LED list. Verify the keyboard exposes the LED in iCUE.
+- Scroll Lock LED missing: LED control is disabled if `CorsairLedId_ScrollLock` is not in the LED list. Verify the keyboard exposes the LED in iCUE.
 - LED resets to default on errors: The app releases control to iCUE when the state is unknown; check logs to see the root error.
 - DLL not found: Place `CUESDK.x64_*.dll` next to the executable or pass `--cuesdk-path`.
 - FRITZ auth failed: Recheck `FRITZ_USERNAME` and `FRITZ_PASSWORD`. The app does not log passwords, only their length.

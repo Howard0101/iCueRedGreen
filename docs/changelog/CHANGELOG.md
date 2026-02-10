@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 1.0.2.2 — 2026-02-10 13:00:25
+[Added]
+- Added `--toggle-on-keypress` to toggle the switch on Scroll Lock keypress.
+
+[Changed]
+- Continue running without iCUE and enable LED control when iCUE becomes available.
+
+[Docs]
+- Documented toggle-on-keypress usage and iCUE availability behavior.
+
 ## 1.0.2.1 — 2026-02-10 09:44:27
 [Fixed]
 - Remove stale running.txt markers from previous boots before starting.

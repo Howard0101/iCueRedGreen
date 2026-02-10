@@ -39,6 +39,11 @@ internal sealed class Options
     public string? CueSdkPath { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether the switch should toggle on keypress.
+    /// </summary>
+    public bool ToggleOnKeypress { get; init; }
+
+    /// <summary>
     /// Loads options using the precedence CLI &gt; environment &gt; appsettings.json &gt; defaults.
     /// </summary>
     /// <param name="args">Command line arguments.</param>
@@ -55,11 +60,6 @@ internal sealed class Options
 
         CliOptions cli = ParseArgs(args);
         showHelp = cli.ShowHelp;
-
-        if (cli.ToggleOnKeypress)
-        {
-            throw new NotSupportedException("--toggle-on-keypress is not implemented yet.");
-        }
 
         AppSettings? appSettings = TryReadAppSettings();
 
@@ -134,7 +134,8 @@ internal sealed class Options
             FritzPassword = password,
             FritzAin = ain,
             CueSdkPath = cueSdkPath,
-            ShowVersion = cli.ShowVersion
+            ShowVersion = cli.ShowVersion,
+            ToggleOnKeypress = cli.ToggleOnKeypress
         };
     }
 
