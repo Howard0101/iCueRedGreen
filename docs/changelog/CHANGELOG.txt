@@ -2,6 +2,10 @@ CHANGELOG (plain text)
 
 [Unreleased]
 
+[1.1.0.20 - 2026-02-10 21:46:29]
+[Added]
+- Added DEBUG log lines for optimistic LED updates during toggles.
+
 [1.1.0.19 - 2026-02-10 21:24:06]
 [Fixed]
 - Generated distinct tray status icons at runtime and removed unused embedded icons.
