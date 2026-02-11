@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.0.0.1 — 2026-02-11 09:15:48
+[Fixed]
+- Removed DEBUG-prefixed optimistic LED log lines.
+
 ## 2.0.0.0 — 2026-02-10 22:48:12
 [Changed]
 - Set production release version to 2.0.0.0.

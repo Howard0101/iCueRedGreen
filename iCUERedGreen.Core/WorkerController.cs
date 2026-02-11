@@ -108,11 +108,7 @@ public sealed class WorkerController
 
         if (!TryOptimisticLedToggle())
         {
-            _logger.Info("DEBUG: Skipping optimistic LED update (state unknown or iCUE unavailable).");
-        }
-        else
-        {
-            _logger.Info("DEBUG: Applied optimistic LED update before toggle.");
+            _logger.Info("Skipping optimistic LED update (state unknown or iCUE unavailable).");
         }
 
         return coordinator.ToggleAndRefreshAsync(_runToken);

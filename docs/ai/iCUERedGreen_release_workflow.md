@@ -6,6 +6,7 @@ Purpose: repeatable release/publish flow plus required confirmation prompts.
 - Applies to iCUERedGreen repository release + local update.
 - Includes version bump, changelog/release docs, publish, and local update.
 - Uses IncludeCueSdk for local publish/update.
+- Release ZIPs must exclude the iCUE SDK DLL and include a missing-DLL notice file.
 
 ## Preconditions
 - You have the SDK DLL available locally (not in git).
@@ -22,7 +23,8 @@ Purpose: repeatable release/publish flow plus required confirmation prompts.
 7. Run tests: dotnet test .\\iCUERedGreen.sln.
 8. Publish: dotnet publish .\\iCUERedGreen.Tray\\iCUERedGreen.Tray.csproj -c Release -r win-x64 --self-contained false -o .\\artifacts\\publish\\win-x64 -p:IncludeCueSdk=true.
 9. Run local update: pwsh -NoProfile -File .\\scripts\\update-published.ps1.
-10. Git status, stage, commit (Conventional Commits), push.
+10. Create release ZIP from a staging copy that excludes iCUESDK*.dll and adds CUESDK_MISSING.txt.
+11. Git status, stage, commit (Conventional Commits), push.
 
 ## Prompts (must be asked and answered before changes)
 Q1: Confirm target version?
@@ -33,6 +35,8 @@ Q4: Go to commit and push?
 ## Notes
 - Always include IncludeCueSdk for local publish/update.
 - SDK DLL and iCUESDK folder must remain untracked in git.
+- Never upload the iCUE SDK DLL to GitHub (repo or release assets).
+- Release ZIPs must exclude iCUESDK*.dll and include a CUESDK_MISSING.txt notice.
 - After publish, always run update script.
 - Commit all touched files.
 
