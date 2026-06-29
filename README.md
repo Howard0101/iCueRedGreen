@@ -13,6 +13,7 @@ The following documents are added when needed and linked here once they exist:
 - Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Usage & Configuration: [docs/USAGE.md](docs/USAGE.md)
 - Releases: [docs/RELEASES.md](docs/RELEASES.md)
+- Design Status Index: [docs/DESIGN_STATUS_INDEX.md](docs/DESIGN_STATUS_INDEX.md)
 - Background Run (Task Scheduler): [docs/BACKGROUND_TASK_SCHEDULER.md](docs/BACKGROUND_TASK_SCHEDULER.md)
 - Third-Party Notices: [docs/THIRD_PARTY_NOTICES.md](docs/THIRD_PARTY_NOTICES.md)
 - Licenses: [docs/licenses/NLog-BSD-3.txt](docs/licenses/NLog-BSD-3.txt)
