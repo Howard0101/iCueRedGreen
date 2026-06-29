@@ -20,6 +20,8 @@
 **/obj/
 .vs/
 artifacts/publish/win-x64/logs/
+artifacts/*.zip
+artifacts/release-staging/
 
 # Local-only files
 docs/LOCAL_PATHS.md
