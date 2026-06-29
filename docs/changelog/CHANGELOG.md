@@ -3,18 +3,22 @@
 ## Unreleased
 
 ## 2.0.3.0 — 2026-06-29 14:31:28
+_GitHub release: [v2.0.3.0](https://github.com/Howard0101/iCueRedGreen/releases/tag/v2.0.3.0) (latest)._
 [Changed]
 - Set production release version to 2.0.3.0 after successful real-world verification of the Sound Off feature and tray menu checkmarks.
 
 ## 2.0.2.2 — 2026-06-29 14:25:59
+_No separate GitHub release; identical payload to 2.0.3.0._
 [Added]
 - Added a checkmark left of the "Toggle Switch" and "Sound Off" tray menu items that reflects live state (switch ON, audio muted).
 
 ## 2.0.2.1 — 2026-06-29 14:10:05
+_GitHub release: [v2.0.2.1](https://github.com/Howard0101/iCueRedGreen/releases/tag/v2.0.2.1) (superseded)._
 [Fixed]
 - Fixed Sound Off doing nothing: the Windows audio mute state could not be read because the `IMMDeviceEnumerator` COM interop omitted its first vtable method (`EnumAudioEndpoints`), so `GetDefaultAudioEndpoint` resolved to the wrong slot and the endpoint cast failed. The tray menu and physical Volume Mute key now toggle mute and update the Volume Mute key LED.
 
 ## 2.0.2.0 — 2026-06-29 13:49:08
+_GitHub release: [v2.0.2.0](https://github.com/Howard0101/iCueRedGreen/releases/tag/v2.0.2.0) (superseded)._
 [Added]
 - Added Sound Off tray control and physical Volume Mute key observation for Windows global audio mute.
 
@@ -28,6 +32,7 @@
 - Added Sound Off coordinator unit tests.
 
 ## 2.0.1.0 — 2026-02-11 09:33:30
+_GitHub release: [v2.0.1.0](https://github.com/Howard0101/iCueRedGreen/releases/tag/v2.0.1.0)._
 [Changed]
 - Set production release version to 2.0.1.0.
 
