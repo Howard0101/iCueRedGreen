@@ -1,6 +1,18 @@
 ### BEGIN TEMPLATE-MANAGED (DO NOT EDIT)
 /.template/reports/
 /.template/backup/
+/.template/*
+!/.template/version.txt
+/TEMP/
+[Bb]in/
+[Oo]bj/
+[Tt]est[Rr]esult*/
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.nupkg
 ### END TEMPLATE-MANAGED
 
 # Build artifacts

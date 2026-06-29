@@ -37,3 +37,7 @@ docs/task-scheduler/*.xml -text binary
 *.dll  binary
 *.pdb  binary
 *.svg  binary
+### BEGIN TEMPLATE-MANAGED-GITATTRIBUTES (DO NOT EDIT)
+*.suo binary
+*.user binary
+### END TEMPLATE-MANAGED-GITATTRIBUTES

@@ -20,35 +20,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Detect Mermaid changes (PR hint)
-        if: ${{ github.event_name == 'pull_request' }}
+      - name: Verify docs links
         shell: pwsh
         run: |
-          git fetch --no-tags --prune --depth=1 origin ${{ github.base_ref }}
-          $base = "origin/${{ github.base_ref }}"
-          $changed = git diff --name-only $base...HEAD
-          $mmdChanged = $changed | Where-Object { $_ -like "docs/diagrams/*.mmd" -or $_ -like "**/*.mmd" }
-          if ($mmdChanged) {
-            Write-Host ""
-            Write-Host "Mermaid diagram sources changed:"
-            $mmdChanged | ForEach-Object { Write-Host " - $_" }
-            Write-Host ""
-            Write-Host "Ensure the committed PNG (and optional SVG) are updated by running:"
-            Write-Host "  pwsh -NoProfile -File .\scripts\make-ai-docs.ps1 -Mode render -Format png"
-            Write-Host "  # or:"
-            Write-Host "  pwsh -NoProfile -File .\scripts\make-ai-docs.ps1 -Mode render -Format both"
-            Write-Host ""
-          }
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install Mermaid CLI
-        run: npm install -g @mermaid-js/mermaid-cli
-
-      - name: Verify diagrams + links
-        shell: pwsh
-        run: |
-          pwsh -NoProfile -File .\scripts\make-ai-docs.ps1 -Mode check
+          pwsh -NoProfile -File .\scripts\verify-ai-docs.ps1 -Mode check

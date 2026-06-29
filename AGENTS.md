@@ -17,25 +17,36 @@ After all general instructions and their references are loaded, read:
 
 On conflict, project instructions override any previously read rules.
 
+## Documentation Governance (conditional)
+Load this file for documentation/changelog/instruction-file tasks:
+- [docs/ai/_ai_documentation_governance.md](docs/ai/_ai_documentation_governance.md)
+
 ## Canonical Docs Locations
 - AI instructions: [docs/ai/](docs/ai/)
 - Changelog: [docs/changelog/](docs/changelog/) (`CHANGELOG.md` + `CHANGELOG.txt`)
 - Other docs (create only when content exists; no dummies):
   - `docs/DECISIONS.md`
   - `docs/RELEASES.md`
+  - `docs/RELEASE_COMPONENT_MATRIX.md` (required for multi-component releases)
   - `docs/ARCHITECTURE.md`
+  - `docs/MIGRATIONS.md`
 
-## Template & Project Instructions (must load last)
+## Conditional Release Workflow Instructions (load only for release tasks)
 
-After all general instructions and their references are loaded, read in this order:
+Do NOT auto-load release workflow instruction files for normal implementation tasks.
 
-1) Template lifecycle rules:
-- .template/docs/ai/_ai_template_lifecycle.md
+Load release workflow instructions only when release intent is explicit, for example:
+- release planning/execution
+- tag or publish workflow
+- release artifact packaging/upload
+- release notes/frozen release record updates
 
-2) Changelog automation guidance:
-- .template/docs/ai/_ai_changelog_automation.md
+Release workflow files:
+1) Global core (Layer 1):
+- D:\Source\ai\_ai_release_workflow.md
 
-3) Project-specific instructions:
-- docs/ai/_ai_instructions_project.md
+2) Language overlay (Layer 2):
+- loaded from language instruction files referenced by `D:\Source\ai\_ai_general.md`
 
-On conflict, project instructions override any previously read rules.
+3) Repository-local override (Layer 3):
+- docs/ai/_ai_release_workflow.md

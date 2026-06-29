@@ -32,3 +32,9 @@ The following documents are added when needed and linked here once they exist:
 ## Notes
 - This README is intentionally minimal.
 - Do not place detailed documentation or rules here.
+
+### Template Link Updates
+- [docs/REPO_RELATIONS.md](docs/REPO_RELATIONS.md)
+- [scripts/invoke-temp-lifecycle-check.ps1](scripts/invoke-temp-lifecycle-check.ps1)
+- [scripts/check-line-endings.ps1](scripts/check-line-endings.ps1)
+- [scripts/verify-ai-docs.ps1](scripts/verify-ai-docs.ps1)
