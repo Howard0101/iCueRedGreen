@@ -1,6 +1,8 @@
 CHANGELOG (plain text)
 
 Unreleased
+
+[2.0.2.0 - 2026-06-29 13:49:08]
 [Added]
 - Added Sound Off tray control and physical Volume Mute key observation for Windows global audio mute.
 [Changed]

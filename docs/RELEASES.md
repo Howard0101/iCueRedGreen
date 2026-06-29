@@ -1,5 +1,9 @@
 # Releases
 
+## 2.0.2.0 — 2026-06-29 13:49:08
+- Feature release: Sound Off tray control and Volume Mute key LED integration.
+- See changelog: [docs/changelog/CHANGELOG.md](changelog/CHANGELOG.md)
+
 ## 2.0.1.0 — 2026-02-11 09:33:30
 - Production release.
 - See changelog: [docs/changelog/CHANGELOG.md](changelog/CHANGELOG.md)
