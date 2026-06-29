@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Runtime.InteropServices;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using iCUERedGreen;
 using NLog;
@@ -17,6 +17,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly Logger _logger;
     private readonly NotifyIcon _notifyIcon;
     private readonly ToolStripMenuItem _toggleItem;
+    private readonly ToolStripMenuItem _soundOffItem;
     private readonly ToolStripMenuItem _settingsItem;
     private readonly ToolStripMenuItem _restartItem;
     private readonly ToolStripMenuItem _openLogsItem;
@@ -29,9 +30,14 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly TraySettingsStore _settingsStore;
     private readonly CredentialStore _credentialStore;
     private readonly SynchronizationContext _uiContext;
+    private readonly CueLightingSession _cueLightingSession;
+    private readonly SoundOffCoordinator _soundOffCoordinator;
+    private readonly CancellationTokenSource _soundOffCts = new();
     private WorkerController? _worker;
     private CancellationTokenSource? _workerCts;
     private Task? _workerTask;
+    private Task? _soundOffTask;
+    private VolumeMuteKeyHook? _volumeMuteKeyHook;
     private bool _disposed;
 
     /// <summary>
@@ -45,8 +51,11 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _settingsStore = new TraySettingsStore(Path.Combine(AppContext.BaseDirectory, "appsettings.json"));
         _credentialStore = new CredentialStore(_logger);
         _showDevUi = showDevUi;
+        _cueLightingSession = new CueLightingSession(_settingsStore.LoadOrDefault(_logger).CueSdk.Path, _logger);
+        _soundOffCoordinator = new SoundOffCoordinator(new WindowsAudioMuteService(), _cueLightingSession, _logger);
 
         _toggleItem = new ToolStripMenuItem("Toggle Switch", null, OnToggleRequested);
+        _soundOffItem = new ToolStripMenuItem("Sound Off", null, OnSoundOffRequested);
         _settingsItem = new ToolStripMenuItem("Settings...", null, OnSettingsRequested);
         _restartItem = new ToolStripMenuItem("Restart Worker", null, OnRestartRequested);
         _openLogsItem = new ToolStripMenuItem("Open Log", null, OnOpenLogsRequested);
@@ -66,6 +75,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _notifyIcon.MouseUp += OnNotifyIconMouseUp;
 
         SyncDevModeMenu();
+        StartSoundOffFeatures();
         QueueAction(() => StartWorkerAsync(showErrors: false));
     }
 
@@ -86,6 +96,10 @@ internal sealed class TrayApplicationContext : ApplicationContext
             _notifyIcon.Visible = false;
             _notifyIcon.Dispose();
             _icons.Dispose();
+            _volumeMuteKeyHook?.Dispose();
+            _soundOffCts.Cancel();
+            _soundOffTask?.GetAwaiter().GetResult();
+            _soundOffCts.Dispose();
             _workerCts?.Dispose();
             _actionGate.Dispose();
         }
@@ -102,6 +116,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     {
         ContextMenuStrip menu = new ContextMenuStrip();
         menu.Items.Add(_toggleItem);
+        menu.Items.Add(_soundOffItem);
         menu.Items.Add(_settingsItem);
         menu.Items.Add(_restartItem);
         menu.Items.Add(new ToolStripSeparator());
@@ -285,6 +300,27 @@ internal sealed class TrayApplicationContext : ApplicationContext
     }
 
     /// <summary>
+    /// Starts the Sound Off refresh loop and physical Volume Mute observation.
+    /// </summary>
+    private void StartSoundOffFeatures()
+    {
+        _volumeMuteKeyHook = VolumeMuteKeyHook.TryStart(
+            () => _soundOffCoordinator.HandlePhysicalKeyPressAsync(_soundOffCts.Token),
+            _logger);
+
+        if (_volumeMuteKeyHook is null)
+        {
+            _logger.Warn("Sound Off key hook unavailable; physical Volume Mute observation disabled.");
+        }
+        else
+        {
+            _logger.Info("Sound Off key hook enabled; Volume Mute key LED follows Windows mute state.");
+        }
+
+        _soundOffTask = Task.Run(() => RunSoundOffRefreshLoopAsync(_soundOffCts.Token));
+    }
+
+    /// <summary>
     /// Runs a queued action under the action gate.
     /// </summary>
     /// <param name="action">The action to run.</param>
@@ -331,7 +367,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         try
         {
             _workerCts = new CancellationTokenSource();
-            _worker = new WorkerController(settings, _logger);
+            _worker = new WorkerController(settings, _logger, _cueLightingSession);
             _worker.SwitchStateChanged += OnSwitchStateChanged;
             _workerTask = _worker.StartAsync(_workerCts.Token);
             // Fire-and-forget the continuation that logs background task faults.
@@ -494,6 +530,16 @@ internal sealed class TrayApplicationContext : ApplicationContext
     }
 
     /// <summary>
+    /// Handles the Sound Off menu click.
+    /// </summary>
+    /// <param name="sender">The event source.</param>
+    /// <param name="e">The event args.</param>
+    private void OnSoundOffRequested(object? sender, EventArgs e)
+    {
+        QueueAction(() => _soundOffCoordinator.ToggleFromTrayAsync(_soundOffCts.Token));
+    }
+
+    /// <summary>
     /// Toggles the switch via the worker.
     /// </summary>
     /// <returns>A task that completes when the toggle finishes.</returns>
@@ -562,6 +608,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
             return;
         }
 
+        _cueLightingSession.UpdateCueSdkPath(updated.CueSdkPath);
         SyncDevModeMenu(updated.DevMode);
         await RestartWorkerAsync(showErrors: true).ConfigureAwait(false);
     }
@@ -851,6 +898,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private async Task ExitAsync()
     {
         await StopWorkerAsync().ConfigureAwait(false);
+        _soundOffCts.Cancel();
         _uiContext.Post(_ => ExitThread(), null);
     }
 
@@ -866,5 +914,410 @@ internal sealed class TrayApplicationContext : ApplicationContext
         {
             MessageBox.Show(message, title, MessageBoxButtons.OK, icon);
         }, null);
+    }
+
+    /// <summary>
+    /// Runs the periodic Sound Off refresh loop.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A task that completes when the loop exits.</returns>
+    private async Task RunSoundOffRefreshLoopAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _soundOffCoordinator.RefreshStateAsync(cancellationToken).ConfigureAwait(false);
+
+            using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+            {
+                await _soundOffCoordinator.RefreshStateAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected during shutdown.
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Sound Off refresh loop failed.");
+        }
+    }
+
+    /// <summary>
+    /// Observes the physical Windows Volume Mute key without suppressing it.
+    /// </summary>
+    private sealed class VolumeMuteKeyHook : IDisposable
+    {
+        private const int WhKeyboardLl = 13;
+        private const int WmKeyDown = 0x0100;
+        private const int WmKeyUp = 0x0101;
+        private const int WmSysKeyDown = 0x0104;
+        private const int WmSysKeyUp = 0x0105;
+        private const uint WmQuit = 0x0012;
+        private const uint VkVolumeMute = 0xAD;
+        private const int ToggleDebounceMilliseconds = 250;
+
+        private readonly Func<Task> _onMuteKeyAsync;
+        private readonly Logger _logger;
+        private readonly ManualResetEventSlim _startedEvent = new(false);
+        private Thread? _thread;
+        private IntPtr _hookHandle = IntPtr.Zero;
+        private HookProc? _hookProc;
+        private uint _threadId;
+        private bool _muteKeyDown;
+        private long _lastToggleTick;
+        private Exception? _startException;
+        private bool _disposed;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VolumeMuteKeyHook"/> class.
+        /// </summary>
+        /// <param name="onMuteKeyAsync">The action to invoke on keydown.</param>
+        /// <param name="logger">The logger to use.</param>
+        private VolumeMuteKeyHook(Func<Task> onMuteKeyAsync, Logger logger)
+        {
+            _onMuteKeyAsync = onMuteKeyAsync ?? throw new ArgumentNullException(nameof(onMuteKeyAsync));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        /// <summary>
+        /// Starts the hook and returns the running instance when successful.
+        /// </summary>
+        /// <param name="onMuteKeyAsync">The action to invoke on keydown.</param>
+        /// <param name="logger">The logger to use.</param>
+        /// <returns>The running hook, or null on failure.</returns>
+        public static VolumeMuteKeyHook? TryStart(Func<Task> onMuteKeyAsync, Logger logger)
+        {
+            VolumeMuteKeyHook hook = new VolumeMuteKeyHook(onMuteKeyAsync, logger);
+            if (!hook.Start())
+            {
+                hook.Dispose();
+                return null;
+            }
+
+            return hook;
+        }
+
+        /// <summary>
+        /// Releases resources and stops the hook thread.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            if (_threadId != 0)
+            {
+                PostThreadMessage(_threadId, WmQuit, IntPtr.Zero, IntPtr.Zero);
+            }
+
+            if (_thread is not null && _thread.IsAlive)
+            {
+                _thread.Join(TimeSpan.FromSeconds(2));
+            }
+
+            _startedEvent.Dispose();
+        }
+
+        /// <summary>
+        /// Starts the hook thread and waits for initialization.
+        /// </summary>
+        /// <returns>True when the hook starts; otherwise false.</returns>
+        private bool Start()
+        {
+            _thread = new Thread(ThreadMain)
+            {
+                IsBackground = true,
+                Name = "iCUERedGreen.VolumeMuteKeyHook"
+            };
+            _thread.Start();
+            _startedEvent.Wait();
+
+            if (_startException is not null)
+            {
+                _logger.Error(_startException, "Failed to start Sound Off key hook.");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Initializes the low-level hook and runs the message loop.
+        /// </summary>
+        private void ThreadMain()
+        {
+            try
+            {
+                _threadId = GetCurrentThreadId();
+                _hookProc = HookCallback;
+                IntPtr moduleHandle = GetModuleHandle(null);
+                if (moduleHandle == IntPtr.Zero)
+                {
+                    _startException = new InvalidOperationException("Failed to resolve module handle for Sound Off key hook.");
+                    return;
+                }
+
+                _hookHandle = SetWindowsHookEx(WhKeyboardLl, _hookProc, moduleHandle, 0);
+                if (_hookHandle == IntPtr.Zero)
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    _startException = new InvalidOperationException($"SetWindowsHookEx failed: {error}.");
+                    return;
+                }
+
+                _startedEvent.Set();
+                RunMessageLoop();
+            }
+            catch (Exception ex)
+            {
+                _startException = ex;
+            }
+            finally
+            {
+                _startedEvent.Set();
+                if (_hookHandle != IntPtr.Zero)
+                {
+                    UnhookWindowsHookEx(_hookHandle);
+                    _hookHandle = IntPtr.Zero;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Processes Windows messages while the hook is active.
+        /// </summary>
+        private void RunMessageLoop()
+        {
+            while (true)
+            {
+                int result = GetMessage(out Msg message, IntPtr.Zero, 0, 0);
+                if (result <= 0)
+                {
+                    break;
+                }
+
+                TranslateMessage(ref message);
+                DispatchMessage(ref message);
+            }
+        }
+
+        /// <summary>
+        /// Handles Volume Mute keypresses and schedules reconciliation.
+        /// </summary>
+        /// <param name="code">The hook code.</param>
+        /// <param name="wParam">The message identifier.</param>
+        /// <param name="lParam">The message payload.</param>
+        /// <returns>The hook result.</returns>
+        private IntPtr HookCallback(int code, IntPtr wParam, IntPtr lParam)
+        {
+            if (code >= 0)
+            {
+                int message = wParam.ToInt32();
+                if (message == WmKeyDown || message == WmSysKeyDown || message == WmKeyUp || message == WmSysKeyUp)
+                {
+                    KbdLlHookStruct data = Marshal.PtrToStructure<KbdLlHookStruct>(lParam);
+                    if (data.vkCode == VkVolumeMute)
+                    {
+                        if (message == WmKeyDown || message == WmSysKeyDown)
+                        {
+                            if (!_muteKeyDown)
+                            {
+                                _muteKeyDown = true;
+                                QueueMuteAction();
+                            }
+                        }
+                        else
+                        {
+                            _muteKeyDown = false;
+                        }
+                    }
+                }
+            }
+
+            return CallNextHookEx(_hookHandle, code, wParam, lParam);
+        }
+
+        /// <summary>
+        /// Executes the mute-key action without blocking the hook thread.
+        /// </summary>
+        private void QueueMuteAction()
+        {
+            long nowTick = Environment.TickCount64;
+            long lastTick = Interlocked.Read(ref _lastToggleTick);
+            if (nowTick - lastTick < ToggleDebounceMilliseconds)
+            {
+                return;
+            }
+
+            Interlocked.Exchange(ref _lastToggleTick, nowTick);
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _onMuteKeyAsync().ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected during shutdown.
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Sound Off key handling failed.");
+                }
+            });
+        }
+
+        /// <summary>
+        /// Defines the low-level hook callback.
+        /// </summary>
+        /// <param name="code">The hook code.</param>
+        /// <param name="wParam">The message identifier.</param>
+        /// <param name="lParam">The message payload.</param>
+        /// <returns>The hook result.</returns>
+        private delegate IntPtr HookProc(int code, IntPtr wParam, IntPtr lParam);
+
+        /// <summary>
+        /// Defines a low-level keyboard hook payload.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct KbdLlHookStruct
+        {
+            /// <summary>
+            /// Gets or sets the virtual key code.
+            /// </summary>
+            public uint vkCode;
+
+            /// <summary>
+            /// Gets or sets the scan code.
+            /// </summary>
+            public uint scanCode;
+
+            /// <summary>
+            /// Gets or sets the hook flags.
+            /// </summary>
+            public uint flags;
+
+            /// <summary>
+            /// Gets or sets the timestamp.
+            /// </summary>
+            public uint time;
+
+            /// <summary>
+            /// Gets or sets the extra info pointer.
+            /// </summary>
+            public UIntPtr dwExtraInfo;
+        }
+
+        /// <summary>
+        /// Represents a point in a Windows message.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct Point
+        {
+            /// <summary>
+            /// Gets or sets the X coordinate.
+            /// </summary>
+            public int x;
+
+            /// <summary>
+            /// Gets or sets the Y coordinate.
+            /// </summary>
+            public int y;
+        }
+
+        /// <summary>
+        /// Defines a Windows message.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct Msg
+        {
+            /// <summary>
+            /// Gets or sets the window handle.
+            /// </summary>
+            public IntPtr hwnd;
+
+            /// <summary>
+            /// Gets or sets the message identifier.
+            /// </summary>
+            public uint message;
+
+            /// <summary>
+            /// Gets or sets the wParam payload.
+            /// </summary>
+            public UIntPtr wParam;
+
+            /// <summary>
+            /// Gets or sets the lParam payload.
+            /// </summary>
+            public IntPtr lParam;
+
+            /// <summary>
+            /// Gets or sets the timestamp.
+            /// </summary>
+            public uint time;
+
+            /// <summary>
+            /// Gets or sets the cursor location.
+            /// </summary>
+            public Point pt;
+        }
+
+        /// <summary>
+        /// Installs a low-level keyboard hook.
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern IntPtr SetWindowsHookEx(int idHook, HookProc callback, IntPtr moduleHandle, uint threadId);
+
+        /// <summary>
+        /// Removes a previously installed hook.
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool UnhookWindowsHookEx(IntPtr hookHandle);
+
+        /// <summary>
+        /// Passes a hook event to the next hook.
+        /// </summary>
+        [DllImport("user32.dll")]
+        private static extern IntPtr CallNextHookEx(IntPtr hookHandle, int code, IntPtr wParam, IntPtr lParam);
+
+        /// <summary>
+        /// Retrieves the next message from the queue.
+        /// </summary>
+        [DllImport("user32.dll")]
+        private static extern int GetMessage(out Msg message, IntPtr windowHandle, uint minFilter, uint maxFilter);
+
+        /// <summary>
+        /// Translates message key data.
+        /// </summary>
+        [DllImport("user32.dll")]
+        private static extern bool TranslateMessage(ref Msg message);
+
+        /// <summary>
+        /// Dispatches a message to the window procedure.
+        /// </summary>
+        [DllImport("user32.dll")]
+        private static extern IntPtr DispatchMessage(ref Msg message);
+
+        /// <summary>
+        /// Posts a message to the specified thread.
+        /// </summary>
+        [DllImport("user32.dll")]
+        private static extern bool PostThreadMessage(uint threadId, uint msg, IntPtr wParam, IntPtr lParam);
+
+        /// <summary>
+        /// Gets the current thread identifier.
+        /// </summary>
+        [DllImport("kernel32.dll")]
+        private static extern uint GetCurrentThreadId();
+
+        /// <summary>
+        /// Resolves a module handle for the specified module path.
+        /// </summary>
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern IntPtr GetModuleHandle(string? moduleName);
     }
 }

@@ -10,4 +10,10 @@
     <PackageReference Include="NLog" Version="6.1.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="iCUERedGreen.Cli" />
+    <InternalsVisibleTo Include="iCUERedGreen.Tray" />
+    <InternalsVisibleTo Include="iCUERedGreen.Tests" />
+  </ItemGroup>
+
 </Project>

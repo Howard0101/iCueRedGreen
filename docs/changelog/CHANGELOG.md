@@ -1,6 +1,17 @@
 # CHANGELOG
 
 ## Unreleased
+[Added]
+- Added Sound Off tray control and physical Volume Mute key observation for Windows global audio mute.
+
+[Changed]
+- Extended the shared iCUE lighting session to track Scroll Lock and Volume Mute independently.
+
+[Docs]
+- Documented the Sound Off architecture, usage, and DES-001 implementation review notes.
+
+[Tests]
+- Added Sound Off coordinator unit tests.
 
 ## 2.0.1.0 — 2026-02-11 09:33:30
 [Changed]

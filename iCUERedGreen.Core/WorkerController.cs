@@ -12,10 +12,9 @@ public sealed class WorkerController
 {
     private readonly WorkerSettings _settings;
     private readonly Logger _logger;
+    private readonly CueLightingSession _cueLightingSession;
     private bool _wasInError;
     private string? _lastErrorSignature;
-    private bool _wasInReleaseError;
-    private string? _lastReleaseErrorSignature;
     private int _optimisticTogglePending;
     private CancellationTokenSource? _runCts;
     private Task? _runTask;
@@ -29,10 +28,22 @@ public sealed class WorkerController
     /// <param name="settings">The resolved settings.</param>
     /// <param name="logger">The logger to use.</param>
     public WorkerController(WorkerSettings settings, Logger logger)
+        : this(settings, logger, null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WorkerController"/> class with a shared lighting session.
+    /// </summary>
+    /// <param name="settings">The resolved settings.</param>
+    /// <param name="logger">The logger to use.</param>
+    /// <param name="cueLightingSession">The shared lighting session, when provided.</param>
+    internal WorkerController(WorkerSettings settings, Logger logger, CueLightingSession? cueLightingSession)
     {
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _settings.Validate();
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _cueLightingSession = cueLightingSession ?? new CueLightingSession(_settings.CueSdkPath, _logger);
     }
 
     /// <summary>
@@ -133,8 +144,7 @@ public sealed class WorkerController
     private async Task RunInternalAsync(CancellationToken cancellationToken)
     {
         using FritzAhaClient fritz = new FritzAhaClient(_settings, _logger);
-        CueSession cueSession = new CueSession(_settings, _logger);
-        PollingCoordinator coordinator = new PollingCoordinator(this, fritz, cueSession, _logger);
+        PollingCoordinator coordinator = new PollingCoordinator(this, fritz, _cueLightingSession, _logger);
         _coordinator = coordinator;
         _runToken = cancellationToken;
 
@@ -216,13 +226,13 @@ public sealed class WorkerController
     /// <summary>
     /// Executes a single poll cycle.
     /// </summary>
-    /// <param name="cueSession">The cue session manager.</param>
+    /// <param name="cueSession">The shared lighting session.</param>
     /// <param name="fritz">The FRITZ!Box client.</param>
     /// <param name="lastState">The previous switch state.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The updated switch state.</returns>
     private async Task<SwitchState> PollOnceAsync(
-        CueSession cueSession,
+        CueLightingSession cueSession,
         FritzAhaClient fritz,
         SwitchState lastState,
         CancellationToken cancellationToken)
@@ -239,11 +249,11 @@ public sealed class WorkerController
             {
                 if (newState == SwitchState.On)
                 {
-                    cueSession.SetRed();
+                    cueSession.SetScrollLockState(SwitchState.On);
                 }
                 else
                 {
-                    cueSession.SetGreen();
+                    cueSession.SetScrollLockState(SwitchState.Off);
                 }
             }
 
@@ -252,15 +262,7 @@ public sealed class WorkerController
         catch (Exception ex)
         {
             LogErrorIfNeeded(ex);
-            if (cueSession.TryReleaseControl(out Exception? releaseError))
-            {
-                LogReleaseRecoveryIfNeeded();
-            }
-            else if (releaseError is not null)
-            {
-                LogReleaseErrorIfNeeded(releaseError);
-            }
-
+            cueSession.SetScrollLockState(SwitchState.Unknown);
             newState = SwitchState.Unknown;
         }
 
@@ -273,8 +275,8 @@ public sealed class WorkerController
     /// </summary>
     /// <param name="newState">The new switch state.</param>
     /// <param name="lastState">The previous switch state.</param>
-    /// <param name="cueSession">The cue session manager.</param>
-    private void LogStateChangeIfNeeded(SwitchState newState, SwitchState lastState, CueSession cueSession)
+    /// <param name="cueSession">The shared lighting session.</param>
+    private void LogStateChangeIfNeeded(SwitchState newState, SwitchState lastState, CueLightingSession cueSession)
     {
         _lastKnownState = newState;
         if (newState == lastState)
@@ -363,37 +365,6 @@ public sealed class WorkerController
         _logger.Warn("Optimistic LED state {0} did not match refresh ({1}).", optimisticLabel, actualLabel);
     }
 
-    /// <summary>
-    /// Logs iCUE release errors only when the failure changes.
-    /// </summary>
-    /// <param name="ex">The release exception.</param>
-    private void LogReleaseErrorIfNeeded(Exception ex)
-    {
-        string signature = $"{ex.GetType().Name}:{ex.Message}";
-        if (string.Equals(_lastReleaseErrorSignature, signature, StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        _lastReleaseErrorSignature = signature;
-        _wasInReleaseError = true;
-        _logger.Error(ex, "Failed to release iCUE control.");
-    }
-
-    /// <summary>
-    /// Logs iCUE release recovery when a previous release failure is resolved.
-    /// </summary>
-    private void LogReleaseRecoveryIfNeeded()
-    {
-        if (!_wasInReleaseError)
-        {
-            return;
-        }
-
-        _wasInReleaseError = false;
-        _lastReleaseErrorSignature = null;
-        _logger.Info("iCUE release recovered.");
-    }
     /// <summary>
     /// Gets the path for the running marker file.
     /// </summary>
@@ -512,7 +483,7 @@ public sealed class WorkerController
     {
         private readonly WorkerController _owner;
         private readonly FritzAhaClient _fritz;
-        private readonly CueSession _cueSession;
+        private readonly CueLightingSession _cueSession;
         private readonly Logger _logger;
         private readonly SemaphoreSlim _gate = new(1, 1);
         private SwitchState _lastState = SwitchState.Unknown;
@@ -525,7 +496,7 @@ public sealed class WorkerController
         /// <param name="fritz">The FRITZ!Box client.</param>
         /// <param name="cueSession">The cue session manager.</param>
         /// <param name="logger">The logger to use.</param>
-        public PollingCoordinator(WorkerController owner, FritzAhaClient fritz, CueSession cueSession, Logger logger)
+        public PollingCoordinator(WorkerController owner, FritzAhaClient fritz, CueLightingSession cueSession, Logger logger)
         {
             _owner = owner ?? throw new ArgumentNullException(nameof(owner));
             _fritz = fritz ?? throw new ArgumentNullException(nameof(fritz));
@@ -571,14 +542,7 @@ public sealed class WorkerController
             }
 
             _lastOptimisticState = targetState;
-            if (targetState == SwitchState.On)
-            {
-                _cueSession.SetRed();
-            }
-            else
-            {
-                _cueSession.SetGreen();
-            }
+            _cueSession.SetScrollLockState(targetState);
 
             return true;
         }
@@ -646,214 +610,6 @@ public sealed class WorkerController
                 _fritz,
                 _lastState,
                 cancellationToken).ConfigureAwait(false);
-        }
-    }
-    /// <summary>
-    /// Manages iCUE availability and LED control state.
-    /// </summary>
-    private sealed class CueSession
-    {
-        private readonly WorkerSettings _settings;
-        private readonly Logger _logger;
-        private CueKeyController? _controller;
-        private bool _wasUnavailable;
-        private string? _lastUnavailableSignature;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CueSession"/> class.
-        /// </summary>
-        /// <param name="settings">Resolved settings.</param>
-        /// <param name="logger">The logger to use.</param>
-        public CueSession(WorkerSettings settings, Logger logger)
-        {
-            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether iCUE is available.
-        /// </summary>
-        public bool IsAvailable => _controller is not null;
-
-        /// <summary>
-        /// Ensures the iCUE SDK is initialized when available.
-        /// </summary>
-        public void EnsureInitialized()
-        {
-            if (_controller is not null)
-            {
-                if (!IsSessionHealthy())
-                {
-                    HandleCueFailure(new InvalidOperationException("iCUE session is not connected."));
-                }
-
-                return;
-            }
-
-            try
-            {
-                CueSdkLoader.Install(_settings.CueSdkPath);
-                _controller = CueKeyController.Initialize(_logger);
-                LogCueRecoveredIfNeeded();
-            }
-            catch (Exception ex)
-            {
-                HandleCueFailure(ex);
-            }
-        }
-
-        /// <summary>
-        /// Sets the LED to red when iCUE is available.
-        /// </summary>
-        public void SetRed()
-        {
-            if (_controller is null)
-            {
-                return;
-            }
-
-            try
-            {
-                if (!IsSessionHealthy())
-                {
-                    return;
-                }
-
-                _controller.SetRed();
-            }
-            catch (Exception ex)
-            {
-                HandleCueFailure(ex);
-            }
-        }
-
-        /// <summary>
-        /// Sets the LED to green when iCUE is available.
-        /// </summary>
-        public void SetGreen()
-        {
-            if (_controller is null)
-            {
-                return;
-            }
-
-            try
-            {
-                if (!IsSessionHealthy())
-                {
-                    return;
-                }
-
-                _controller.SetGreen();
-            }
-            catch (Exception ex)
-            {
-                HandleCueFailure(ex);
-            }
-        }
-
-        /// <summary>
-        /// Releases control back to iCUE when possible.
-        /// </summary>
-        /// <param name="error">The release error, when one occurs.</param>
-        /// <returns>True when release succeeds; otherwise false.</returns>
-        public bool TryReleaseControl(out Exception? error)
-        {
-            error = null;
-            if (_controller is null)
-            {
-                return false;
-            }
-
-            try
-            {
-                if (!IsSessionHealthy())
-                {
-                    return false;
-                }
-
-                _controller.ReleaseControl();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                error = ex;
-                HandleCueFailure(ex);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Logs iCUE unavailability and clears the active controller.
-        /// </summary>
-        /// <param name="ex">The exception that triggered the failure.</param>
-        private void HandleCueFailure(Exception ex)
-        {
-            string signature = $"{ex.GetType().Name}:{ex.Message}";
-            if (!string.Equals(_lastUnavailableSignature, signature, StringComparison.Ordinal))
-            {
-                _lastUnavailableSignature = signature;
-                _logger.Warn(ex, "iCUE not available; running without LED control.");
-            }
-
-            TryDisconnect();
-            _wasUnavailable = true;
-            _controller = null;
-        }
-
-        /// <summary>
-        /// Checks whether the iCUE session is healthy and connected.
-        /// </summary>
-        /// <returns>True when connected; otherwise false.</returns>
-        private bool IsSessionHealthy()
-        {
-            try
-            {
-                CorsairError result = CorsairNative.CorsairGetSessionDetails(out _);
-                if (result == CorsairError.CE_Success)
-                {
-                    return true;
-                }
-
-                CorsairNative.CorsairDisconnect();
-                HandleCueFailure(new InvalidOperationException($"CorsairGetSessionDetails failed: {result}."));
-                return false;
-            }
-            catch (Exception ex)
-            {
-                HandleCueFailure(ex);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Attempts to disconnect from iCUE to reset the SDK state.
-        /// </summary>
-        private void TryDisconnect()
-        {
-            try
-            {
-                CorsairNative.CorsairDisconnect();
-            }
-            catch (Exception ex)
-            {
-                _logger.Debug(ex, "DEBUG: Failed to disconnect from iCUE.");
-            }
-        }
-
-        /// <summary>
-        /// Logs recovery when iCUE becomes available again.
-        /// </summary>
-        private void LogCueRecoveredIfNeeded()
-        {
-            if (!_wasUnavailable)
-            {
-                return;
-            }
-
-            _wasUnavailable = false;
-            _lastUnavailableSignature = null;
-            _logger.Info("iCUE available; LED control enabled.");
         }
     }
     /// <summary>

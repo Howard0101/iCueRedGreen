@@ -23,12 +23,15 @@ This document defines the target architecture for the tray-first application mod
 - Control iCUE LED when available; run without iCUE when not.
 - Keyboard hook for Scroll Lock toggle (configurable).
 - State model for ON/OFF/UNKNOWN with timestamps.
+- Shared iCUE lighting session for both Scroll Lock and Volume Mute LEDs.
+- Windows global audio mute integration for the Sound Off feature.
 
 ## Tray Responsibilities
 - Start and stop the core worker in-process.
 - Show status via tray icon + tooltip.
 - Provide a settings dialog with Save + Restart.
-- Provide menu actions: Toggle, Restart worker, Open logs, Exit.
+- Provide menu actions: Toggle Switch, Sound Off, Restart Worker, Open Log, Exit.
+- Run the physical Volume Mute key observer independently from FRITZ worker availability.
 
 ## Settings Model
 - `appsettings.json` (next to tray exe) stores non-secret settings:
@@ -55,10 +58,12 @@ This document defines the target architecture for the tray-first application mod
   2. Dispose FRITZ + iCUE objects
   3. Recreate worker with new settings
 - Keyboard hook starts/stops with the worker.
+- The Sound Off coordinator starts with the tray app and keeps running even when FRITZ configuration is missing.
 
 ## UI States
 - Tooltip: `iCUERedGreen: ON|OFF|UNKNOWN` and iCUE availability.
 - Tray icon color indicates state.
+- Sound Off does not change the tray icon; it uses only the physical Volume Mute key LED.
 
 ## Autostart
 - Task Scheduler runs `iCUERedGreen.Tray.exe` at logon.

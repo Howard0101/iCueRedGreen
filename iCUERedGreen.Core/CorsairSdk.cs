@@ -165,7 +165,12 @@ internal enum CorsairLedIdKeyboard : int
     /// <summary>
     /// Scroll Lock LED.
     /// </summary>
-    CLK_ScrollLock = 85
+    CLK_ScrollLock = 85,
+    /// <summary>
+    /// Volume Mute LED.
+    /// Verified from iCUESDKLedIdEnum.h: CLK_Mute = 100.
+    /// </summary>
+    CLK_Mute = 100
 }
 
 /// <summary>
@@ -493,6 +498,7 @@ internal static class CorsairLedLuidHelper
 internal static class CueSdkLoader
 {
     private static bool _installed;
+    private static string? _explicitPath;
 
     /// <summary>
     /// Installs the DLL resolver for the CUE SDK.
@@ -500,6 +506,8 @@ internal static class CueSdkLoader
     /// <param name="explicitPath">Optional explicit DLL path.</param>
     public static void Install(string? explicitPath)
     {
+        _explicitPath = explicitPath;
+
         if (_installed)
         {
             return;
@@ -512,9 +520,9 @@ internal static class CueSdkLoader
                 return IntPtr.Zero;
             }
 
-            if (!string.IsNullOrWhiteSpace(explicitPath) && File.Exists(explicitPath))
+            if (!string.IsNullOrWhiteSpace(_explicitPath) && File.Exists(_explicitPath))
             {
-                return NativeLibrary.Load(explicitPath);
+                return NativeLibrary.Load(_explicitPath);
             }
 
             string baseDir = AppContext.BaseDirectory;
@@ -542,7 +550,7 @@ internal static class CueSdkLoader
 }
 
 /// <summary>
-/// Controls a specific LED via the iCUE SDK.
+/// Controls tracked keyboard LEDs via the iCUE SDK.
 /// </summary>
 internal sealed class CueKeyController
 {
@@ -550,21 +558,26 @@ internal sealed class CueKeyController
     private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(5);
     private static CorsairSessionStateChangedHandler? _sessionHandler;
     private readonly string _deviceId;
-    private readonly uint _ledLuid;
+    private readonly Dictionary<uint, CorsairLedColor> _ledColors = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CueKeyController"/> class.
     /// </summary>
     /// <param name="deviceId">The device identifier.</param>
-    /// <param name="ledLuid">The LED LUID.</param>
-    private CueKeyController(string deviceId, uint ledLuid)
+    /// <param name="hasMuteKey">True when the keyboard exposes the mute LED.</param>
+    private CueKeyController(string deviceId, bool hasMuteKey)
     {
         _deviceId = deviceId ?? throw new ArgumentNullException(nameof(deviceId));
-        _ledLuid = ledLuid;
+        HasMuteKey = hasMuteKey;
     }
 
     /// <summary>
-    /// Initializes the iCUE SDK and returns a controller for the Scroll Lock LED.
+    /// Gets a value indicating whether the keyboard exposes the Volume Mute LED.
+    /// </summary>
+    public bool HasMuteKey { get; }
+
+    /// <summary>
+    /// Initializes the iCUE SDK and returns a controller for the keyboard LEDs used by the app.
     /// </summary>
     /// <param name="logger">The logger to use.</param>
     /// <returns>The key controller instance.</returns>
@@ -581,9 +594,9 @@ internal sealed class CueKeyController
             throw new InvalidOperationException($"iCUE session state is {state}.");
         }
 
-        string deviceId = FindKeyboardDeviceId(logger);
+        KeyboardDeviceSelection selection = FindKeyboardDevice(logger);
         CorsairError controlResult = CorsairNative.CorsairRequestControl(
-            deviceId,
+            selection.DeviceId,
             CorsairAccessLevel.CAL_Shared);
         if (controlResult != CorsairError.CE_Success)
         {
@@ -597,54 +610,92 @@ internal sealed class CueKeyController
             throw new InvalidOperationException($"CorsairSetLayerPriority failed: {priorityResult}.");
         }
 
-        uint scrollLockLuid = CorsairLedLuidHelper.FromKeyboard(CorsairLedIdKeyboard.CLK_ScrollLock);
-        return new CueKeyController(deviceId, scrollLockLuid);
+        return new CueKeyController(selection.DeviceId, selection.HasMuteKey);
     }
 
     /// <summary>
-    /// Sets the LED to red.
+    /// Applies the Scroll Lock LED state.
     /// </summary>
-    public void SetRed()
+    /// <param name="state">The state to represent.</param>
+    public void SetScrollLockState(SwitchState state)
     {
-        SetColor(255, 0, 0);
+        switch (state)
+        {
+            case SwitchState.On:
+                SetKeyboardLedColor(CorsairLedIdKeyboard.CLK_ScrollLock, 255, 0, 0, 255);
+                break;
+            case SwitchState.Off:
+                SetKeyboardLedColor(CorsairLedIdKeyboard.CLK_ScrollLock, 0, 255, 0, 255);
+                break;
+            default:
+                ClearKeyboardLed(CorsairLedIdKeyboard.CLK_ScrollLock);
+                break;
+        }
     }
 
     /// <summary>
-    /// Sets the LED to green.
+    /// Applies the Volume Mute LED state.
     /// </summary>
-    public void SetGreen()
+    /// <param name="state">The state to represent.</param>
+    public void SetMuteState(SoundMuteState state)
     {
-        SetColor(0, 255, 0);
+        if (!HasMuteKey)
+        {
+            return;
+        }
+
+        switch (state)
+        {
+            case SoundMuteState.Muted:
+                SetKeyboardLedColor(CorsairLedIdKeyboard.CLK_Mute, 255, 0, 0, 255);
+                break;
+            case SoundMuteState.Unmuted:
+                SetKeyboardLedColor(CorsairLedIdKeyboard.CLK_Mute, 0, 255, 0, 255);
+                break;
+            default:
+                ClearKeyboardLed(CorsairLedIdKeyboard.CLK_Mute);
+                break;
+        }
     }
 
     /// <summary>
-    /// Sets the LED to yellow.
+    /// Sets a keyboard LED to the specified RGBA color.
     /// </summary>
-    public void SetYellow()
-    {
-        SetColor(255, 255, 0);
-    }
-
-    /// <summary>
-    /// Sets the LED to the specified RGB color.
-    /// </summary>
+    /// <param name="ledId">The keyboard LED identifier.</param>
     /// <param name="r">Red channel.</param>
     /// <param name="g">Green channel.</param>
     /// <param name="b">Blue channel.</param>
-    public void SetColor(byte r, byte g, byte b)
+    /// <param name="a">Alpha channel.</param>
+    public void SetKeyboardLedColor(CorsairLedIdKeyboard ledId, byte r, byte g, byte b, byte a)
     {
-        var colors = new[]
+        uint ledLuid = CorsairLedLuidHelper.FromKeyboard(ledId);
+        _ledColors[ledLuid] = new CorsairLedColor
         {
-            new CorsairLedColor
-            {
-                id = _ledLuid,
-                r = r,
-                g = g,
-                b = b,
-                a = 255
-            }
+            id = ledLuid,
+            r = r,
+            g = g,
+            b = b,
+            a = a
         };
 
+        FlushLedColors();
+    }
+
+    /// <summary>
+    /// Clears a tracked keyboard LED override by setting it fully transparent on this layer.
+    /// </summary>
+    /// <param name="ledId">The keyboard LED identifier.</param>
+    public void ClearKeyboardLed(CorsairLedIdKeyboard ledId)
+    {
+        SetKeyboardLedColor(ledId, 0, 0, 0, 0);
+    }
+
+    /// <summary>
+    /// Flushes all tracked keyboard LED colors to the iCUE SDK.
+    /// </summary>
+    private void FlushLedColors()
+    {
+        CorsairLedColor[] colors = _ledColors.Values.ToArray();
         CorsairError result = CorsairNative.CorsairSetLedColors(_deviceId, colors.Length, colors);
         if (result != CorsairError.CE_Success)
         {
@@ -653,15 +704,85 @@ internal sealed class CueKeyController
     }
 
     /// <summary>
-    /// Releases lighting control to allow iCUE to restore default lighting.
+    /// Selects a keyboard device and reports supported LED capabilities.
     /// </summary>
-    public void ReleaseControl()
+    /// <param name="logger">The logger to use.</param>
+    /// <returns>The device selection.</returns>
+    private static KeyboardDeviceSelection FindKeyboardDevice(Logger logger)
     {
-        CorsairError result = CorsairNative.CorsairReleaseControl(_deviceId);
+        CorsairDeviceFilter filter = new CorsairDeviceFilter
+        {
+            deviceTypeMask = (int)CorsairDeviceType.CDT_Keyboard
+        };
+
+        CorsairDeviceInfo[] devices = new CorsairDeviceInfo[CorsairConstants.DeviceCountMax];
+        int size = devices.Length;
+        CorsairError result = CorsairNative.CorsairGetDevices(ref filter, devices.Length, devices, ref size);
         if (result != CorsairError.CE_Success)
         {
-            throw new InvalidOperationException($"CorsairReleaseControl failed: {result}.");
+            throw new InvalidOperationException($"CorsairGetDevices failed: {result}.");
         }
+
+        if (size <= 0)
+        {
+            throw new InvalidOperationException("No keyboard devices detected by iCUE.");
+        }
+
+        uint scrollLockLuid = CorsairLedLuidHelper.FromKeyboard(CorsairLedIdKeyboard.CLK_ScrollLock);
+        uint muteLuid = CorsairLedLuidHelper.FromKeyboard(CorsairLedIdKeyboard.CLK_Mute);
+        for (int i = 0; i < size; i++)
+        {
+            string deviceId = devices[i].id ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(deviceId))
+            {
+                continue;
+            }
+
+            KeyboardLedCapabilities capabilities = GetKeyboardLedCapabilities(deviceId, scrollLockLuid, muteLuid, logger);
+            if (capabilities.HasScrollLock)
+            {
+                logger.Info("Using keyboard device: {0}", deviceId);
+                return new KeyboardDeviceSelection(deviceId, capabilities.HasMuteKey);
+            }
+        }
+
+        throw new InvalidOperationException("Scroll Lock LED not found on detected keyboards.");
+    }
+
+    /// <summary>
+    /// Checks whether a device exposes a specific LED LUID.
+    /// </summary>
+    /// <param name="deviceId">The device identifier.</param>
+    /// <param name="ledLuid">The LED LUID.</param>
+    /// <param name="logger">The logger to use.</param>
+    /// <returns>True if the LED exists; otherwise false.</returns>
+    private static KeyboardLedCapabilities GetKeyboardLedCapabilities(string deviceId, uint scrollLockLuid, uint muteLuid, Logger logger)
+    {
+        CorsairLedPosition[] positions = new CorsairLedPosition[CorsairConstants.DeviceLedCountMax];
+        int size = positions.Length;
+        CorsairError result = CorsairNative.CorsairGetLedPositions(deviceId, positions.Length, positions, ref size);
+        if (result != CorsairError.CE_Success)
+        {
+            logger.Warn("CorsairGetLedPositions failed for device {0}: {1}", deviceId, result);
+            return default;
+        }
+
+        bool hasScrollLock = false;
+        bool hasMuteKey = false;
+        for (int i = 0; i < size; i++)
+        {
+            if (positions[i].id == scrollLockLuid)
+            {
+                hasScrollLock = true;
+            }
+
+            if (positions[i].id == muteLuid)
+            {
+                hasMuteKey = true;
+            }
+        }
+
+        return new KeyboardLedCapabilities(hasScrollLock, hasMuteKey);
     }
 
     /// <summary>
@@ -672,7 +793,7 @@ internal sealed class CueKeyController
     private static CorsairSessionState ConnectToIcue(Logger logger)
     {
         CorsairSessionState currentState = CorsairSessionState.CSS_Invalid;
-        var tcs = new TaskCompletionSource<CorsairSessionState>(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<CorsairSessionState> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         CorsairSessionStateChangedHandler handler = (IntPtr context, ref CorsairSessionStateChanged eventData) =>
         {
@@ -725,75 +846,16 @@ internal sealed class CueKeyController
     }
 
     /// <summary>
-    /// Finds a keyboard device that exposes the Scroll Lock LED.
+    /// Represents a keyboard device selection result.
     /// </summary>
-    /// <param name="logger">The logger to use.</param>
-    /// <returns>The device identifier.</returns>
-    private static string FindKeyboardDeviceId(Logger logger)
-    {
-        CorsairDeviceFilter filter = new CorsairDeviceFilter
-        {
-            deviceTypeMask = (int)CorsairDeviceType.CDT_Keyboard
-        };
-
-        CorsairDeviceInfo[] devices = new CorsairDeviceInfo[CorsairConstants.DeviceCountMax];
-        int size = devices.Length;
-        CorsairError result = CorsairNative.CorsairGetDevices(ref filter, devices.Length, devices, ref size);
-        if (result != CorsairError.CE_Success)
-        {
-            throw new InvalidOperationException($"CorsairGetDevices failed: {result}.");
-        }
-
-        if (size <= 0)
-        {
-            throw new InvalidOperationException("No keyboard devices detected by iCUE.");
-        }
-
-        uint scrollLockLuid = CorsairLedLuidHelper.FromKeyboard(CorsairLedIdKeyboard.CLK_ScrollLock);
-        for (int i = 0; i < size; i++)
-        {
-            string deviceId = devices[i].id ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(deviceId))
-            {
-                continue;
-            }
-
-            if (DeviceHasLed(deviceId, scrollLockLuid, logger))
-            {
-                logger.Info("Using keyboard device: {0}", deviceId);
-                return deviceId;
-            }
-        }
-
-        throw new InvalidOperationException("Scroll Lock LED not found on detected keyboards.");
-    }
+    /// <param name="DeviceId">The device identifier.</param>
+    /// <param name="HasMuteKey">True when the mute key LED is available.</param>
+    private readonly record struct KeyboardDeviceSelection(string DeviceId, bool HasMuteKey);
 
     /// <summary>
-    /// Checks whether a device exposes a specific LED LUID.
+    /// Represents LED capability flags for a keyboard device.
     /// </summary>
-    /// <param name="deviceId">The device identifier.</param>
-    /// <param name="ledLuid">The LED LUID.</param>
-    /// <param name="logger">The logger to use.</param>
-    /// <returns>True if the LED exists; otherwise false.</returns>
-    private static bool DeviceHasLed(string deviceId, uint ledLuid, Logger logger)
-    {
-        CorsairLedPosition[] positions = new CorsairLedPosition[CorsairConstants.DeviceLedCountMax];
-        int size = positions.Length;
-        CorsairError result = CorsairNative.CorsairGetLedPositions(deviceId, positions.Length, positions, ref size);
-        if (result != CorsairError.CE_Success)
-        {
-            logger.Warn("CorsairGetLedPositions failed for device {0}: {1}", deviceId, result);
-            return false;
-        }
-
-        for (int i = 0; i < size; i++)
-        {
-            if (positions[i].id == ledLuid)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    /// <param name="HasScrollLock">True when Scroll Lock is available.</param>
+    /// <param name="HasMuteKey">True when Volume Mute is available.</param>
+    private readonly record struct KeyboardLedCapabilities(bool HasScrollLock, bool HasMuteKey);
 }

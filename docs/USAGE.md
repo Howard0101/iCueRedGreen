@@ -9,7 +9,8 @@ This document explains how to run `iCUERedGreen` and configure FRITZ!DECT 200 po
 
 ## Getting Started
 1. Run `iCUERedGreen.Tray.exe` and open **Settings** to configure FRITZ credentials.
-2. (Dev-only CLI) Set the required environment variables in PowerShell:
+2. Use the tray menu item **Sound Off** or the physical Windows Volume Mute key to control the Windows global audio mute state.
+3. (Dev-only CLI) Set the required environment variables in PowerShell:
 ```powershell
 $env:FRITZ_HOST="fritz.box"
 $env:FRITZ_USERNAME="your-user"
@@ -17,14 +18,14 @@ $env:FRITZ_PASSWORD="your-password"
 $env:FRITZ_AIN="12345 6789012"
 ```
 
-3. (Dev-only CLI) Run the app (from the project folder):
+4. (Dev-only CLI) Run the app (from the project folder):
 ```powershell
 dotnet run --project .\iCUERedGreen.Cli\iCUERedGreen.Cli.csproj -- --interval 5
 ```
 
-4. Download the iCUE SDK from Corsair (see References). For builds/publish, place `iCUESDK.x64_2019.dll` in `iCUERedGreen.Cli\Asset\`.
+5. Download the iCUE SDK from Corsair (see References). For builds/publish, place `iCUESDK.x64_2019.dll` in `iCUERedGreen.Cli\Asset\`.
    - To include the DLL in publish output, run: `dotnet publish ... -p:IncludeCueSdk=true`.
-5. To run the published CLI executable, place the CUE SDK DLL next to the exe or provide the path:
+6. To run the published CLI executable, place the CUE SDK DLL next to the exe or provide the path:
 ```powershell
 .\iCUERedGreen.Cli.exe --cuesdk-path "C:\Path\To\iCUESDK.x64_2019.dll"
 ```
@@ -118,14 +119,18 @@ These options apply to the dev-only CLI (`iCUERedGreen.Cli.exe`).
 
 ## Notes
 - The Scroll Lock LED must be exposed by your keyboard in the CUE SDK; otherwise LED control stays disabled.
+- The Volume Mute LED must be exposed by your keyboard in the CUE SDK for Sound Off lighting. The implementation uses `CLK_Mute = 100`, verified from `iCUESDK/include/iCUESDK/iCUESDKLedIdEnum.h`.
 - LED mapping: ON → red, OFF → green.
-- If the switch state is unknown or an error occurs, the app releases control so iCUE returns to its default lighting.
+- Sound Off LED mapping: muted → red, unmuted → green, unknown/unavailable → neutral/default.
+- If a state is unknown or an error occurs, the app clears only the affected key override so iCUE returns that key to its default lighting.
 - If iCUE is not running, the app still polls/toggles the switch but LED control is disabled (neutral).
 - When iCUE starts later, LED control resumes automatically.
 - If iCUE was restarted, the next poll will reconnect and re-enable LED updates.
 - When using `--toggle-on-keypress`, disable any iCUE scripts bound to Scroll Lock to avoid double triggers.
-- The app uses shared iCUE control and only overrides the Scroll Lock LED; other lighting remains under iCUE control.
+- The app uses shared iCUE control and only overrides the Scroll Lock and Volume Mute LEDs; other lighting remains under iCUE control.
+- Sound Off failures are log-only; the tray app intentionally shows no popup or balloon for mute-state failures.
 - Rapid successive Scroll Lock key presses can temporarily desync the Scroll Lock LED/indicator from the FRITZ switch state until the next poll completes.
+- Rapid successive Volume Mute key presses can briefly outrun the last confirmed Windows mute state; the Sound Off LED is reconciled by the refresh loop.
 - Start the tray app with `--dev-ui` to show Dev Mode controls in the menu and settings dialog.
 
 ## Logging
@@ -152,7 +157,8 @@ These options apply to the dev-only CLI (`iCUERedGreen.Cli.exe`).
 - iCUE not running: The app continues without LED control. Start iCUE to re-enable LED updates. If you see `ServerNotFound` during handshake, iCUE is not available.
 - No control permission: If you see `NoControl`, open iCUE and grant SDK control for the device profile.
 - Scroll Lock LED missing: LED control is disabled if `CorsairLedId_ScrollLock` is not in the LED list. Verify the keyboard exposes the LED in iCUE.
-- LED resets to default on errors: The app releases control to iCUE when the state is unknown; check logs to see the root error.
+- Volume Mute LED missing: Sound Off still toggles Windows audio, but the key lighting remains neutral if `CLK_Mute (100)` is not exposed by the keyboard.
+- LED resets to default on errors: The app clears only the affected key override when the state is unknown; check logs to see the root error.
 - DLL not found: Place `CUESDK.x64_*.dll` next to the executable or pass `--cuesdk-path`.
 - FRITZ auth failed: Recheck `FRITZ_USERNAME` and `FRITZ_PASSWORD`. The app does not log passwords, only their length.
 - FRITZ host/AIN wrong: Verify `FRITZ_HOST` and `FRITZ_AIN` (AIN must include spaces exactly).
