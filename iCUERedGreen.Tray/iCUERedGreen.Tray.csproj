@@ -7,10 +7,10 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>..\iCUERedGreen.Cli\Asset\iCUERedGreen.keyboard-dot.ico</ApplicationIcon>
-    <Version>2.0.2.1</Version>
-    <AssemblyVersion>2.0.2.1</AssemblyVersion>
-    <FileVersion>2.0.2.1</FileVersion>
-    <InformationalVersion>2.0.2.1</InformationalVersion>
+    <Version>2.0.2.2</Version>
+    <AssemblyVersion>2.0.2.2</AssemblyVersion>
+    <FileVersion>2.0.2.2</FileVersion>
+    <InformationalVersion>2.0.2.2</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>

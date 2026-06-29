@@ -34,6 +34,11 @@ internal sealed class SoundOffCoordinator
     }
 
     /// <summary>
+    /// Occurs when the displayed mute state changes (optimistic or confirmed).
+    /// </summary>
+    public event EventHandler<SoundMuteState>? MuteStateChanged;
+
+    /// <summary>
     /// Refreshes the confirmed Windows mute state and LED feedback.
     /// </summary>
     /// <param name="cancellationToken">A cancellation token.</param>
@@ -144,6 +149,7 @@ internal sealed class SoundOffCoordinator
     {
         _cueLightingSession.EnsureInitialized();
         _cueLightingSession.SetMuteState(state);
+        MuteStateChanged?.Invoke(this, state);
     }
 
     /// <summary>

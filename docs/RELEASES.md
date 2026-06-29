@@ -1,5 +1,9 @@
 # Releases
 
+## 2.0.2.2 — 2026-06-29 14:25:59
+- Feature release: tray menu shows a live checkmark for "Toggle Switch" (switch ON) and "Sound Off" (muted).
+- See changelog: [docs/changelog/CHANGELOG.md](changelog/CHANGELOG.md)
+
 ## 2.0.2.1 — 2026-06-29 14:10:05
 - Bugfix release: Sound Off (tray menu + physical Volume Mute key) now works; fixed broken Windows audio mute COM interop.
 - See changelog: [docs/changelog/CHANGELOG.md](changelog/CHANGELOG.md)

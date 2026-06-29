@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.0.2.2 — 2026-06-29 14:25:59
+[Added]
+- Added a checkmark left of the "Toggle Switch" and "Sound Off" tray menu items that reflects live state (switch ON, audio muted).
+
 ## 2.0.2.1 — 2026-06-29 14:10:05
 [Fixed]
 - Fixed Sound Off doing nothing: the Windows audio mute state could not be read because the `IMMDeviceEnumerator` COM interop omitted its first vtable method (`EnumAudioEndpoints`), so `GetDefaultAudioEndpoint` resolved to the wrong slot and the endpoint cast failed. The tray menu and physical Volume Mute key now toggle mute and update the Volume Mute key LED.

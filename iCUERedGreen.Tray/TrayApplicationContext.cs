@@ -53,6 +53,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _showDevUi = showDevUi;
         _cueLightingSession = new CueLightingSession(_settingsStore.LoadOrDefault(_logger).CueSdk.Path, _logger);
         _soundOffCoordinator = new SoundOffCoordinator(new WindowsAudioMuteService(), _cueLightingSession, _logger);
+        _soundOffCoordinator.MuteStateChanged += OnMuteStateChanged;
 
         _toggleItem = new ToolStripMenuItem("Toggle Switch", null, OnToggleRequested);
         _soundOffItem = new ToolStripMenuItem("Sound Off", null, OnSoundOffRequested);
@@ -93,6 +94,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
         if (disposing)
         {
+            _soundOffCoordinator.MuteStateChanged -= OnMuteStateChanged;
             _notifyIcon.Visible = false;
             _notifyIcon.Dispose();
             _icons.Dispose();
@@ -461,6 +463,20 @@ internal sealed class TrayApplicationContext : ApplicationContext
         string cueLabel = snapshot.IsCueAvailable ? "iCUE OK" : "iCUE off";
         SetTrayStatus($"iCUERedGreen: {stateLabel} ({cueLabel})");
         UpdateIcon(snapshot.State);
+
+        // Show a checkmark left of "Toggle Switch" while the switch is ON.
+        _toggleItem.Checked = snapshot.State == SwitchState.On;
+    }
+
+    /// <summary>
+    /// Handles mute state updates from the Sound Off coordinator.
+    /// </summary>
+    /// <param name="sender">The event source.</param>
+    /// <param name="state">The current mute state.</param>
+    private void OnMuteStateChanged(object? sender, SoundMuteState state)
+    {
+        // Show a checkmark left of "Sound Off" while the audio is muted.
+        _uiContext.Post(_ => _soundOffItem.Checked = state == SoundMuteState.Muted, null);
     }
 
     /// <summary>
