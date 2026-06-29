@@ -238,6 +238,20 @@ internal sealed class WindowsAudioMuteService : IWindowsAudioMuteService
     private interface IMMDeviceEnumerator
     {
         /// <summary>
+        /// Enumerates audio endpoints.
+        /// </summary>
+        /// <remarks>
+        /// This method is unused, but it must remain declared first to preserve the COM vtable
+        /// layout. <c>EnumAudioEndpoints</c> is the first method of <c>IMMDeviceEnumerator</c>;
+        /// omitting it shifts <see cref="GetDefaultAudioEndpoint"/> onto the wrong vtable slot and
+        /// the returned object fails to cast to <see cref="IMMDevice"/> (E_NOINTERFACE).
+        /// </remarks>
+        /// <param name="dataFlow">The data flow.</param>
+        /// <param name="stateMask">The device state mask.</param>
+        /// <param name="devices">The device collection pointer.</param>
+        void EnumAudioEndpoints(EDataFlow dataFlow, int stateMask, out IntPtr devices);
+
+        /// <summary>
         /// Gets the default audio endpoint.
         /// </summary>
         /// <param name="dataFlow">The data flow.</param>

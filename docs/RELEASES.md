@@ -1,5 +1,9 @@
 # Releases
 
+## 2.0.2.1 — 2026-06-29 14:10:05
+- Bugfix release: Sound Off (tray menu + physical Volume Mute key) now works; fixed broken Windows audio mute COM interop.
+- See changelog: [docs/changelog/CHANGELOG.md](changelog/CHANGELOG.md)
+
 ## 2.0.2.0 — 2026-06-29 13:49:08
 - Feature release: Sound Off tray control and Volume Mute key LED integration.
 - See changelog: [docs/changelog/CHANGELOG.md](changelog/CHANGELOG.md)

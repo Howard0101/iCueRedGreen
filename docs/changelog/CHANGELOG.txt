@@ -2,6 +2,10 @@ CHANGELOG (plain text)
 
 Unreleased
 
+[2.0.2.1 - 2026-06-29 14:10:05]
+[Fixed]
+- Fixed Sound Off doing nothing: the Windows audio mute state could not be read because the IMMDeviceEnumerator COM interop omitted its first vtable method (EnumAudioEndpoints), so GetDefaultAudioEndpoint resolved to the wrong slot and the endpoint cast failed. The tray menu and physical Volume Mute key now toggle mute and update the Volume Mute key LED.
+
 [2.0.2.0 - 2026-06-29 13:49:08]
 [Added]
 - Added Sound Off tray control and physical Volume Mute key observation for Windows global audio mute.
