@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.0.3.0 — 2026-06-29 14:31:28
+[Changed]
+- Set production release version to 2.0.3.0 after successful real-world verification of the Sound Off feature and tray menu checkmarks.
+
 ## 2.0.2.2 — 2026-06-29 14:25:59
 [Added]
 - Added a checkmark left of the "Toggle Switch" and "Sound Off" tray menu items that reflects live state (switch ON, audio muted).

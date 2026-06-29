@@ -1,5 +1,9 @@
 # Releases
 
+## 2.0.3.0 — 2026-06-29 14:31:28
+- Production release: Sound Off (tray + Volume Mute key) and live tray menu checkmarks verified in real use.
+- See changelog: [docs/changelog/CHANGELOG.md](changelog/CHANGELOG.md)
+
 ## 2.0.2.2 — 2026-06-29 14:25:59
 - Feature release: tray menu shows a live checkmark for "Toggle Switch" (switch ON) and "Sound Off" (muted).
 - See changelog: [docs/changelog/CHANGELOG.md](changelog/CHANGELOG.md)
