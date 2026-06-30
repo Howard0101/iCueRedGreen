@@ -1,5 +1,9 @@
 # Releases
 
+## 2.0.4.0 — 2026-06-30 09:58:44
+- Production release: renamed the tray menu action from `Toggle Switch` to `DECT Power` so it stays distinct from `Sound Off`, while keeping the Sound Off and live-checkmark behavior from the last production release.
+- See changelog: [docs/changelog/CHANGELOG.md](changelog/CHANGELOG.md)
+
 ## 2.0.3.0 — 2026-06-29 14:31:28
 - Production release: Sound Off (tray + Volume Mute key) and live tray menu checkmarks verified in real use.
 - See changelog: [docs/changelog/CHANGELOG.md](changelog/CHANGELOG.md)

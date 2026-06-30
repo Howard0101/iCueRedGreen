@@ -1,11 +1,15 @@
 # CHANGELOG
 
 ## Unreleased
+
+## 2.0.4.0 — 2026-06-30 09:58:44
+_GitHub release: [v2.0.4.0](https://github.com/Howard0101/iCueRedGreen/releases/tag/v2.0.4.0) (latest)._
 [Changed]
-- [payload-impact] Renamed the tray menu action from `Toggle Switch` to `DECT Power` to distinguish it clearly from the separate `Sound Off` function.
+- Renamed the tray menu action from `Toggle Switch` to `DECT Power` to distinguish it clearly from the separate `Sound Off` function.
+- Set production release version to 2.0.4.0.
 
 ## 2.0.3.0 — 2026-06-29 14:31:28
-_GitHub release: [v2.0.3.0](https://github.com/Howard0101/iCueRedGreen/releases/tag/v2.0.3.0) (latest)._
+_GitHub release: [v2.0.3.0](https://github.com/Howard0101/iCueRedGreen/releases/tag/v2.0.3.0) (superseded)._
 [Changed]
 - Set production release version to 2.0.3.0 after successful real-world verification of the Sound Off feature and tray menu checkmarks.
 
