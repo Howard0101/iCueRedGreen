@@ -30,7 +30,7 @@ This document defines the target architecture for the tray-first application mod
 - Start and stop the core worker in-process.
 - Show status via tray icon + tooltip.
 - Provide a settings dialog with Save + Restart.
-- Provide menu actions: Toggle Switch, Sound Off, Restart Worker, Open Log, Exit.
+- Provide menu actions: DECT Power, Sound Off, Restart Worker, Open Log, Exit.
 - Run the physical Volume Mute key observer independently from FRITZ worker availability.
 
 ## Settings Model

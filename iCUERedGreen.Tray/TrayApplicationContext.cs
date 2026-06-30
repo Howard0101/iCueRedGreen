@@ -55,7 +55,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _soundOffCoordinator = new SoundOffCoordinator(new WindowsAudioMuteService(), _cueLightingSession, _logger);
         _soundOffCoordinator.MuteStateChanged += OnMuteStateChanged;
 
-        _toggleItem = new ToolStripMenuItem("Toggle Switch", null, OnToggleRequested);
+        _toggleItem = new ToolStripMenuItem("DECT Power", null, OnToggleRequested);
         _soundOffItem = new ToolStripMenuItem("Sound Off", null, OnSoundOffRequested);
         _settingsItem = new ToolStripMenuItem("Settings...", null, OnSettingsRequested);
         _restartItem = new ToolStripMenuItem("Restart Worker", null, OnRestartRequested);
@@ -464,7 +464,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         SetTrayStatus($"iCUERedGreen: {stateLabel} ({cueLabel})");
         UpdateIcon(snapshot.State);
 
-        // Show a checkmark left of "Toggle Switch" while the switch is ON.
+        // Show a checkmark left of "DECT Power" while the switch is ON.
         _toggleItem.Checked = snapshot.State == SwitchState.On;
     }
 

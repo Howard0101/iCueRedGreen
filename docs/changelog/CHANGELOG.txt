@@ -1,6 +1,8 @@
 CHANGELOG (plain text)
 
 Unreleased
+[Changed]
+- Renamed the tray menu action from Toggle Switch to DECT Power to distinguish it clearly from the separate Sound Off function.
 
 [2.0.3.0 - 2026-06-29 14:31:28]
 GitHub release: https://github.com/Howard0101/iCueRedGreen/releases/tag/v2.0.3.0 (latest)
